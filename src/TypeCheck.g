@@ -77,6 +77,7 @@ decl [SymbolTable stable,boolean isParam]
 type returns [Type t = null]
    : INT { $t = Type.intType(); }
    | BOOL { $t = Type.boolType(); }
+   | VOID { $t = Type.voidType(); }
    | ^(STRUCT id=ID)
       {
          if (!stypes.isDefined($id.text))
