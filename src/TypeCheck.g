@@ -161,7 +161,7 @@ block [boolean loop] returns [Type t = null]
    {
       Block blk = new Block(func.getName());
    }
-   :  ^(BLOCK { current.push(blk); } sl=statement_list) { System.out.println("Heres a block"); $t = sl.t; if (loop) current.peek().addNext(blk); current.pop().addNext(next.peek()); }
+   :  ^(BLOCK { current.peek().addNext(blk); current.push(blk); } sl=statement_list) { System.out.println("Heres a block"); $t = sl.t; if (loop) current.peek().addNext(blk); current.pop().addNext(next.peek()); }
    ;
 
 statement_list returns [Type t = null]

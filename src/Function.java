@@ -52,7 +52,7 @@ public class Function {
                blocks.add(block);
 
       try {
-         File file = new File(name + ".dot");
+         File file = new File("dot/" + name + ".dot");
          if (!file.exists())
             file.createNewFile();
  
