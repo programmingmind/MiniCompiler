@@ -2,7 +2,7 @@ SRCS=MiniParser.java MiniLexer.java TypeCheck.java
 FILES=$(addprefix src/, $(SRCS))
 CLASSPATH=lib/antlr-3.3-complete.jar
 
-src/Mini.class : src/*.java gen/antlr.generated
+bin/Mini.class : src/*.java gen/antlr.generated
 	javac -classpath $(CLASSPATH) -d bin/ src/*.java
 
 gen/antlr.generated: gen/antlr.generated.mini gen/antlr.generated.type
