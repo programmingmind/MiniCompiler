@@ -19,8 +19,11 @@ options
 {
    private StructTypes stypes = new StructTypes();
    private Functions funcs = new Functions();
+   private Function func;
    private Stack<SymbolTable> stables;
    private Stack<Type> returns;
+   private Stack<Block> next;
+   private Stack<Block> current;
 }
 
 error0 [String text]
@@ -126,8 +129,10 @@ function
    @init
    {
       SymbolTable vars = new SymbolTable();
+      next = new Stack<Block>();
+      current = new Stack<Block>();
    }
-   : ^(FUN id=ID parameters[vars] ^(RETTYPE rt=return_type) declarations[vars] { funcs.newFunction($id.text,rt.t,vars); stables.push(vars); returns.push(rt.t); } sl=statement_list) { if (sl.t == null && !returns.peek().equals(Type.voidType())) error0($id.text + " missing return value"); stables.pop(); returns.pop(); }
+   : ^(FUN id=ID parameters[vars] ^(RETTYPE rt=return_type) declarations[vars] { funcs.newFunction(func = new Function($id.text,rt.t,vars)); stables.push(vars); returns.push(rt.t); current.push(func.getEntry()); next.push(func.getExit()); } sl=statement_list) { if (sl.t == null && !returns.peek().equals(Type.voidType())) error0($id.text + " missing return value"); stables.pop(); returns.pop(); current.peek().addNext(func.getExit()); func.saveDot(); }
    ;
 
 parameters [SymbolTable params]
@@ -140,15 +145,23 @@ return_type returns [Type t = null]
    ;
 
 statement returns [Type t = null]
-   :  ^(BLOCK sl=statement_list) { System.out.println("Heres a block"); $t = sl.t; }
+   :  b=block[false] { $t = b.t; }
    |  ^(ASSIGN a=expression l=lvalue) { System.out.println("Here I be assigning"); if (! a.t.equals(l.t)) error0("assignments need the same types"); }
    |  ^(PRINT a=expression ENDL?) { System.out.println("Let us print"); if (! a.t.isInt()) error0("can only print ints"); }
    |  ^(READ l=lvalue) { if (! l.t.isInt()) error0("can only read in ints"); }
-   |  ^(IF a=expression s=statement s2=statement?) { if (! a.t.isBool()) error0("if statements need bool expression"); if (s2 != null && s.t != null && s.t.equals(s2.t)) $t = s.t; }
-   |  ^(WHILE a=expression statement b=expression) { if (! (a.t.isBool() && b.t.isBool())) error0("while statements need bool expressions"); }
+   |  ^(IF { next.push(new Block(func.getName())); } a=expression b=block[false] b2=block[false]?) { if (! a.t.isBool()) error0("if statements need bool expression"); if (b2 != null && b.t != null && b.t.equals(b2.t)) $t = b.t; if (b2 == null) current.peek().addNext(next.peek()); current.push(next.pop()); }
+   |  ^(WHILE { next.push(new Block(func.getName())); } a=expression block[true] e=expression) { if (! (a.t.isBool() && e.t.isBool())) error0("while statements need bool expressions"); current.peek().addNext(next.peek()); current.push(next.pop()); }
    |  ^(DELETE a=expression) { if (! a.t.isStruct()) error0("can only delete a struct");}
    |  r=ret { if (! r.t.equals(returns.peek())) error0("return type doesn't match"); $t = r.t; }
-   |  i=invocation { System.out.println("invoking"); /*$t = i.t; don't need this because an invocation statement does nothing for return*/ }
+   |  i=invocation { System.out.println("invoking"); }
+   ;
+
+block [boolean loop] returns [Type t = null]
+   @init
+   {
+      Block blk = new Block(func.getName());
+   }
+   :  ^(BLOCK { current.push(blk); } sl=statement_list) { System.out.println("Heres a block"); $t = sl.t; if (loop) current.peek().addNext(blk); current.pop().addNext(next.peek()); }
    ;
 
 statement_list returns [Type t = null]
@@ -161,7 +174,7 @@ ret returns [Type t = null]
    ;
 
 invocation returns [Type t = null]
-   : ^(INVOKE id=ID args=arguments) { System.out.println("invoked " + $id.text); funcs.checkParams($id.text,args.argTypes); $t = funcs.getReturnType($id.text); }
+   : ^(INVOKE id=ID args=arguments) { System.out.println("invoked " + $id.text); funcs.get($id.text).checkParams(args.argTypes); $t = funcs.get($id.text).getReturnType(); }
    ;
 
 expression returns [Type t = null]
