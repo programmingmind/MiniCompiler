@@ -53,28 +53,34 @@ program
       stables.push(stable);
       returns.push(Type.voidType());
    }
-   :  ^(PROGRAM types[stable] declarations[stable] functions)
+   : ^(PROGRAM types[stable] declarations[stable] functions)
    ;
 
 types [SymbolTable stable]
-   :  ^(TYPES (types_sub[stable]))
-   |  TYPES { System.out.println("no struct types"); }
+   : ^(TYPES (types_sub[stable]))
+   | TYPES { System.out.println("no struct types"); }
    ;
 
 types_sub [SymbolTable stable]
-   :  type_declaration[stable] types_sub[stable]?
+   : type_declaration[stable] types_sub[stable]?
    ;
 
 type_declaration [SymbolTable stable]
-   :  ^(STRUCT id=ID { stypes.newStruct($id.text); } nested_decl[stypes.getStructMembers($id.text)])
+   : ^(STRUCT id=ID { stypes.newStruct($id.text); } nested_decl[stypes.getStructMembers($id.text)])
    ;
 
 nested_decl[SymbolTable stable]
-   :  (decl[stable,false])+
+   : (decl[stable,false])+
    ;
 
 decl [SymbolTable stable,boolean isParam]
-   :  ^(DECL ^(TYPE t=type) id=ID) { if (isParam) $stable.putParam($id.text, t.t); else $stable.put($id.text, t.t); }
+   : ^(DECL ^(TYPE t=type) id=ID)
+      {
+         if (isParam)
+            $stable.putParam($id.text, t.t);
+         else
+            $stable.put($id.text, t.t);
+      }
    ;
 
 type returns [Type t = null]
@@ -105,7 +111,7 @@ decl_list [SymbolTable stable]
    ;
 
 id_list [Type t, SymbolTable stable]
-   :  (
+   : (
          id=ID
          {
             if ($stable.redef($id.text))
@@ -132,28 +138,96 @@ function
       next = new Stack<Block>();
       current = new Stack<Block>();
    }
-   : ^(FUN id=ID parameters[vars] ^(RETTYPE rt=return_type) declarations[vars] { funcs.newFunction(func = new Function($id.text,rt.t,vars)); stables.push(vars); returns.push(rt.t); current.push(func.getEntry()); next.push(func.getExit()); } sl=statement_list) { if (sl.t == null && !returns.peek().equals(Type.voidType())) error0($id.text + " missing return value"); stables.pop(); returns.pop(); current.peek().addNext(func.getExit()); func.saveDot(); }
+   : ^(
+         FUN id=ID parameters[vars] ^(RETTYPE rt=return_type) declarations[vars]
+         {
+            funcs.newFunction(func = new Function($id.text,rt.t,vars));
+            stables.push(vars);
+            returns.push(rt.t); 
+            current.push(func.getEntry());
+            next.push(func.getExit());
+         }
+         sl=statement_list
+      )
+      {
+         if (sl.t == null && !returns.peek().equals(Type.voidType()))
+            error0($id.text + " missing return value");
+         stables.pop();
+         returns.pop();
+         current.peek().addNext(func.getExit());
+         func.saveDot();
+      }
    ;
 
 parameters [SymbolTable params]
-   :  ^(PARAMS decl[params,true]*)
+   : ^(PARAMS decl[params,true]*)
    ;
 
 return_type returns [Type t = null]
    : tmp=type { $t = tmp.t; System.out.println("has return: " + $t); }
-   |  { System.out.println("void return"); $t = Type.voidType(); }
+   | { System.out.println("void return"); $t = Type.voidType(); }
    ;
 
 statement returns [Type t = null]
-   :  b=block[false] { $t = b.t; }
-   |  ^(ASSIGN a=expression l=lvalue) { System.out.println("Here I be assigning"); if (! a.t.equals(l.t)) error0("assignments need the same types"); }
-   |  ^(PRINT a=expression ENDL?) { System.out.println("Let us print"); if (! a.t.isInt()) error0("can only print ints"); }
-   |  ^(READ l=lvalue) { if (! l.t.isInt()) error0("can only read in ints"); }
-   |  ^(IF { next.push(new Block(func.getName())); } a=expression b=block[false] b2=block[false]?) { if (! a.t.isBool()) error0("if statements need bool expression"); if (b2 != null && b.t != null && b.t.equals(b2.t)) $t = b.t; if (b2 == null) current.peek().addNext(next.peek()); current.push(next.pop()); }
-   |  ^(WHILE { next.push(new Block(func.getName())); } a=expression block[true] e=expression) { if (! (a.t.isBool() && e.t.isBool())) error0("while statements need bool expressions"); current.peek().addNext(next.peek()); current.push(next.pop()); }
-   |  ^(DELETE a=expression) { if (! a.t.isStruct()) error0("can only delete a struct");}
-   |  r=ret { if (! r.t.equals(returns.peek())) error0("return type doesn't match"); $t = r.t; }
-   |  i=invocation { System.out.println("invoking"); }
+   : b=block[false] { $t = b.t; }
+   | ^(ASSIGN a=expression l=lvalue)
+      {
+         System.out.println("Here I be assigning");
+         if (! a.t.equals(l.t))
+            error0("assignments need the same types");
+      }
+   | ^(PRINT a=expression ENDL?)
+      {
+         System.out.println("Let us print");
+         if (! a.t.isInt())
+            error0("can only print ints");
+      }
+   | ^(READ l=lvalue)
+      {
+         if (! l.t.isInt())
+            error0("can only read in ints");
+      }
+   | ^(
+         IF
+         {
+            next.push(new Block(func.getName()));
+         }
+         a=expression b=block[false] b2=block[false]?
+      )
+      {
+         if (! a.t.isBool())
+            error0("if statements need bool expression");
+         if (b2 != null && b.t != null && b.t.equals(b2.t))
+            $t = b.t;
+         if (b2 == null)
+            current.peek().addNext(next.peek());
+         current.push(next.pop());
+      }
+   | ^(
+         WHILE
+         {
+            next.push(new Block(func.getName()));
+         }
+         a=expression block[true] e=expression
+      )
+      {
+         if (! (a.t.isBool() && e.t.isBool()))
+            error0("while statements need bool expressions");
+         current.peek().addNext(next.peek());
+         current.push(next.pop());
+      }
+   | ^(DELETE a=expression)
+      {
+         if (! a.t.isStruct())
+            error0("can only delete a struct");
+      }
+   | r=ret
+      {
+         if (! r.t.equals(returns.peek()))
+            error0("return type doesn't match");
+         $t = r.t;
+      }
+   | i=invocation { System.out.println("invoking"); }
    ;
 
 block [boolean loop] returns [Type t = null]
@@ -161,11 +235,36 @@ block [boolean loop] returns [Type t = null]
    {
       Block blk = new Block(func.getName());
    }
-   :  ^(BLOCK { current.peek().addNext(blk); current.push(blk); } sl=statement_list) { System.out.println("Heres a block"); $t = sl.t; if (loop) current.peek().addNext(blk); current.pop().addNext(next.peek()); }
+   : ^(
+         BLOCK
+         {
+            current.peek().addNext(blk);
+            current.push(blk);
+         }
+         sl=statement_list
+      )
+      {
+         System.out.println("Heres a block");
+         $t = sl.t;
+         if (loop)
+            current.peek().addNext(blk);
+         current.pop().addNext(next.peek());
+      }
    ;
 
 statement_list returns [Type t = null]
-   : ^(STMTS (tmp=statement { if ($t != null) System.err.println("WARNING: statements after return"); else $t = tmp.t; })*)
+   : ^(
+         STMTS
+         (
+            tmp=statement
+            {
+               if ($t != null)
+                  System.err.println("WARNING: statements after return");
+               else
+                  $t = tmp.t;
+            }
+         )*
+      )
    ;
  
 ret returns [Type t = null]
@@ -174,7 +273,12 @@ ret returns [Type t = null]
    ;
 
 invocation returns [Type t = null]
-   : ^(INVOKE id=ID args=arguments) { System.out.println("invoked " + $id.text); funcs.get($id.text).checkParams(args.argTypes); $t = funcs.get($id.text).getReturnType(); }
+   : ^(INVOKE id=ID args=arguments)
+      {
+         System.out.println("invoked " + $id.text);
+         funcs.get($id.text).checkParams(args.argTypes);
+         $t = funcs.get($id.text).getReturnType();
+      }
    ;
 
 expression returns [Type t = null]
@@ -190,23 +294,52 @@ expression returns [Type t = null]
    ;
 
 lvalue returns [Type t = null]
-   : ^(DOT l=lvalue id=ID) {if (! l.t.isStruct()) error0("can only dot from a struct"); $t=stypes.getStructMembers(l.t.getName()).get($id.text); }
-   | id=ID { SymbolTable stable = stables.peek(); if (! stable.isDefined($id.text)) error0("not defined: " + $id.text); $t=stable.get($id.text); }
+   : ^(DOT l=lvalue id=ID)
+      {
+         if (! l.t.isStruct())
+            error0("can only dot from a struct");
+            $t=stypes.getStructMembers(l.t.getName()).get($id.text);
+      }
+   | id=ID
+      {
+         SymbolTable stable = stables.peek();
+         if (! stable.isDefined($id.text))
+            error0("not defined: " + $id.text);
+         $t=stable.get($id.text);
+      }
    ;
 
 selector returns [Type t = null]
-   :  tmp=factor { $t=tmp.t; System.out.println("factor: " + $t); } (DOT^ id=ID { if (! $t.isStruct()) error0("not a struct: " + $t); $t=stypes.getStructMembers($t.getName()).get($id.text);})*
+   : tmp=factor
+      {
+         $t=tmp.t;
+         System.out.println("factor: " + $t);
+      }
+      (DOT^ id=ID
+         {
+            if (! $t.isStruct())
+               error0("not a struct: " + $t);
+            $t=stypes.getStructMembers($t.getName()).get($id.text);
+         }
+      )*
    ;
 
 factor returns [Type t = null]
-   :  LPAREN! tmp=expression RPAREN! { $t = tmp.t; }
-   |  i=invocation { System.out.println("invoking"); $t = i.t; }
-   |  id=ID { System.out.println("looking up " + $id.text); SymbolTable stable = stables.peek(); if (! stable.isDefined($id.text)) error0("not defined: " + $id.text); $t=stable.get($id.text);}
-   |  INTEGER { $t=Type.intType(); }
-   |  TRUE { $t=Type.boolType(); }
-   |  FALSE { $t=Type.boolType(); }
-   |  ^(NEW id=ID) { $t=Type.structType($id.text); }
-   |  NULL { $t=Type.structType("null"); }
+   : LPAREN! tmp=expression RPAREN! { $t = tmp.t; }
+   | i=invocation { System.out.println("invoking"); $t = i.t; }
+   | id=ID
+      {
+         System.out.println("looking up " + $id.text);
+         SymbolTable stable = stables.peek();
+         if (! stable.isDefined($id.text))
+            error0("not defined: " + $id.text);
+         $t=stable.get($id.text);
+      }
+   | INTEGER { $t=Type.intType(); }
+   | TRUE { $t=Type.boolType(); }
+   | FALSE { $t=Type.boolType(); }
+   | ^(NEW id=ID) { $t=Type.structType($id.text); }
+   | NULL { $t=Type.structType("null"); }
    ;
 
 arguments returns [ArrayList<Type> argTypes]
