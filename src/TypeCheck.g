@@ -312,12 +312,7 @@ expression returns [Type t = null]
             error0("types are wrong");
          $t=Type.boolType();
       }
-   | ^(DOT a=expression id=ID)
-      {
-         if (! a.t.isStruct())
-            error0("not a struct : " + a.t);
-         $t=stypes.getStructMembers(a.t.getName()).get($id.text);
-      }
+   | l=lvalue { $t=l.t; }
    | ^(NEG a=expression)
       {
          if (! a.t.isInt())
@@ -330,43 +325,17 @@ expression returns [Type t = null]
             error0("not a bool");
          $t=Type.boolType();
       }
-   | s=selector { $t=s.t; }
+   | f=factor { $t=f.t; }
    ;
 
 lvalue returns [Type t = null]
-   : ^(DOT l=lvalue id=ID)
+   : ^(DOT (l=lvalue|f=factor) id=ID)
       {
-         if (! l.t.isStruct())
+         Type tmp = l != null ? l.t : f.t;
+         if (! tmp.isStruct())
             error0("can only dot from a struct");
-            $t=stypes.getStructMembers(l.t.getName()).get($id.text);
+         $t=stypes.getStructMembers(tmp.getName()).get($id.text);
       }
-   | id=ID
-      {
-         SymbolTable stable = stables.peek();
-         if (! stable.isDefined($id.text))
-            error0("not defined: " + $id.text);
-         $t=stable.get($id.text);
-      }
-   ;
-
-selector returns [Type t = null]
-   : tmp=factor
-      {
-         $t=tmp.t;
-         System.out.println("factor: " + $t);
-      }
-      (DOT^ id=ID
-         {
-            if (! $t.isStruct())
-               error0("not a struct: " + $t);
-            $t=stypes.getStructMembers($t.getName()).get($id.text);
-         }
-      )*
-   ;
-
-factor returns [Type t = null]
-   : LPAREN! tmp=expression RPAREN! { $t = tmp.t; }
-   | i=invocation { System.out.println("invoking"); $t = i.t; }
    | id=ID
       {
          System.out.println("looking up " + $id.text);
@@ -375,6 +344,11 @@ factor returns [Type t = null]
             error0("not defined: " + $id.text);
          $t=stable.get($id.text);
       }
+   ;
+
+factor returns [Type t = null]
+   : LPAREN! tmp=expression RPAREN! { $t = tmp.t; }
+   | i=invocation { System.out.println("invoking"); $t = i.t; }
    | INTEGER { $t=Type.intType(); }
    | TRUE { $t=Type.boolType(); }
    | FALSE { $t=Type.boolType(); }
