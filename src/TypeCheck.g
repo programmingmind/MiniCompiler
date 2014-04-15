@@ -357,10 +357,6 @@ factor returns [Type t = null]
    ;
 
 arguments returns [ArrayList<Type> argTypes]
-   : tmp=arg_list {$argTypes=tmp.argTypes;}
-   ;
-
-arg_list returns [ArrayList<Type> argTypes]
    @init
    {
       $argTypes = new ArrayList<Type>();
