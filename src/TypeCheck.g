@@ -282,14 +282,54 @@ invocation returns [Type t = null]
    ;
 
 expression returns [Type t = null]
-   : ^((PLUS | TIMES | DIVIDE) a=expression b=expression) { if (! (a.t.isInt() && b.t.isInt())) error0("not an int"); $t=Type.intType(); }
-   | ^(MINUS a=expression b=expression?) { if (! ($a.t.isInt() &&  (b == null || $b.t.isInt()))) error0("not an int"); $t=Type.intType(); }
-   | ^((AND | OR) a=expression b=expression) { if (! ($a.t.isBool() && $b.t.isBool())) error0("not a bool"); $t=Type.boolType(); }
-   | ^((LT | GT | NE | LE | GE) a=expression b=expression) { if (! ($a.t.isInt() && $b.t.isInt())) error0("numeric comparisons need ints"); $t=Type.boolType(); }
-   | ^(EQ a=expression b=expression) { if (! ($a.t.equals($b.t) && ($a.t.isInt() || $a.t.isBool()))) error0("types are wrong"); $t=Type.boolType(); }
-   | ^(DOT a=expression id=ID) { if (! a.t.isStruct()) error0("not a struct : " + a.t); $t=stypes.getStructMembers(a.t.getName()).get($id.text); }
-   | ^(NEG a=expression) { if (! a.t.isInt()) error0("not an int"); $t=Type.intType(); }
-   | ^(NOT a=expression) { if (! a.t.isBool()) error0("not a bool"); $t=Type.boolType(); }
+   : ^((PLUS | TIMES | DIVIDE) a=expression b=expression)
+      {
+         if (! (a.t.isInt() && b.t.isInt()))
+            error0("not an int");
+         $t=Type.intType();
+      }
+   | ^(MINUS a=expression b=expression?)
+      {
+         if (! ($a.t.isInt() && (b == null || $b.t.isInt())))
+            error0("not an int");
+         $t=Type.intType();
+      }
+   | ^((AND | OR) a=expression b=expression)
+      {
+         if (! ($a.t.isBool() && $b.t.isBool()))
+            error0("not a bool");
+         $t=Type.boolType();
+      }
+   | ^((LT | GT | NE | LE | GE) a=expression b=expression)
+      {
+         if (! ($a.t.isInt() && $b.t.isInt()))
+            error0("numeric comparisons need ints");
+         $t=Type.boolType();
+      }
+   | ^(EQ a=expression b=expression)
+      {
+         if (! ($a.t.equals($b.t) && ($a.t.isInt() || $a.t.isBool())))
+            error0("types are wrong");
+         $t=Type.boolType();
+      }
+   | ^(DOT a=expression id=ID)
+      {
+         if (! a.t.isStruct())
+            error0("not a struct : " + a.t);
+         $t=stypes.getStructMembers(a.t.getName()).get($id.text);
+      }
+   | ^(NEG a=expression)
+      {
+         if (! a.t.isInt())
+            error0("not an int");
+         $t=Type.intType();
+      }
+   | ^(NOT a=expression)
+      {
+         if (! a.t.isBool())
+            error0("not a bool");
+         $t=Type.boolType();
+      }
    | s=selector { $t=s.t; }
    ;
 
