@@ -1,5 +1,7 @@
 public class Instruction {
-   String text;
+   private String text;
+   private int[] source;
+   private int target;
 
    public Instruction(String text) {
       this.text = text;

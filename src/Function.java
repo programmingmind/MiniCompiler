@@ -3,13 +3,16 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class Function {
    private String name;
    private Type returnType;
    private SymbolTable vars;
+   private HashMap<String, Integer> registers;
    private Block entry, exit;
+   private int currentRegister;
 
    public Function(String name, Type returnType, SymbolTable vars) {
       this.name = name;
@@ -18,6 +21,12 @@ public class Function {
 
       this.entry = new Block(name, "entry");
       this.exit = new Block(name, "exit");
+
+      currentRegister = 0;
+      registers = new HashMap<String, Integer>();
+
+      for (String var : vars.getLocals())
+         putVarRegister(var, getNextRegister());
    }
 
    public String getName() {
@@ -39,6 +48,22 @@ public class Function {
 
    public void checkParams(List<Type> args) {
       vars.checkParams(args);
+   }
+
+   public int getNextRegister() {
+      return currentRegister++;
+   }
+
+   public int peekNextRegister() {
+      return currentRegister;
+   }
+
+   public Integer getVarRegister(String varName) {
+      return registers.get(varName);
+   }
+
+   public void putVarRegister(String varName, int reg) {
+      registers.put(varName, reg);
    }
 
    public void saveDot() {
@@ -71,5 +96,10 @@ public class Function {
       } catch (IOException e) {
          ;
       }
+   }
+
+   public void cleanBlocks() {
+      // remove empty blocks
+      // add backward nodes
    }
 }

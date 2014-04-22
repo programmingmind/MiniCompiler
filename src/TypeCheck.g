@@ -178,9 +178,19 @@ statement returns [Type t = null]
       }
    | ^(PRINT a=expression ENDL?)
       {
-         System.out.println("Let us print");
          if (! a.t.isInt())
             error0("can only print ints");
+
+         if (a.reg == null)
+            current.peek().addInstruction(InstructionFactory.loadi(a.imm, a.reg = func.getNextRegister()));
+
+         Instruction tmp = null;
+         if ($ENDL != null)
+            tmp = InstructionFactory.println(a.reg);
+         else
+            tmp = InstructionFactory.print(a.reg);
+
+         current.peek().addInstruction(tmp);
       }
    | ^(READ l=lvalue)
       {
@@ -281,38 +291,113 @@ invocation returns [Type t = null]
       }
    ;
 
-expression returns [Type t = null]
-   : ^((PLUS | TIMES | DIVIDE) a=expression b=expression)
+expression returns [Type t = null, Integer reg = null, Integer imm = null]
+   : ^(op=(PLUS | TIMES | DIVIDE) a=expression b=expression)
       {
          if (! (a.t.isInt() && b.t.isInt()))
             error0("not an int");
          $t=Type.intType();
+
+         Integer tmpi = null, lReg = null, rReg = null;
+
+         if (a.imm != null && b.imm != null) {
+            switch (op.getType()) {
+               case PLUS:
+                  $imm = a.imm + b.imm;
+                  break;
+               case TIMES:
+                  $imm = a.imm * b.imm;
+                  break;
+               case DIVIDE:
+                  $imm = a.imm / b.imm;
+                  break;
+            }
+         } else {
+            if (a.imm != null) {
+               lReg = b.reg;
+               tmpi = a.imm;
+            } else if (b.imm != null) {
+               lReg = a.reg;
+               tmpi = b.imm;
+            } else {
+               lReg = a.reg;
+               rReg = b.reg;
+            }
+
+            if (tmpi != null && op.getType() != PLUS) {
+               rReg = func.getNextRegister();
+               current.peek().addInstruction(InstructionFactory.loadi(tmpi, rReg));
+               tmpi = null;
+            }
+
+            $reg = func.getNextRegister();
+            current.peek().addInstruction(InstructionFactory.arithmetic(op.getType(), tmpi, lReg, rReg, $reg));
+         }
       }
    | ^(MINUS a=expression b=expression?)
       {
-         if (! ($a.t.isInt() && (b == null || $b.t.isInt())))
+         if (! (a.t.isInt() && (b == null || b.t.isInt())))
             error0("not an int");
          $t=Type.intType();
+
+         if (b == null) {
+            if (a.imm != null)
+               $imm = -a.imm;
+            else {
+               int tmp = func.getNextRegister();
+               current.peek().addInstruction(InstructionFactory.loadi(0, tmp));
+               current.peek().addInstruction(InstructionFactory.arithmetic(MINUS, null, tmp, a.reg, $reg = func.getNextRegister()));
+            }
+         } else if (a.imm != null && b.imm != null) {
+            $imm = a.imm - b.imm;
+         } else if (a.imm != null) {
+            current.peek().addInstruction(InstructionFactory.arithmetic(MINUS, a.imm, b.reg, null, $reg = func.getNextRegister()));
+         } else if (b.imm != null) {
+            current.peek().addInstruction(InstructionFactory.arithmetic(PLUS, -b.imm, a.reg, null, $reg = func.getNextRegister()));
+         } else {
+            System.out.println("current: " + current);
+            System.out.println("current.peek(): " + current.peek());
+            System.out.println("func: " + func);
+            System.out.println("a reg: " + a.reg);
+            System.out.println("b reg: " + b.reg);
+            current.peek().addInstruction(InstructionFactory.arithmetic(MINUS, null, a.reg, b.reg, $reg = func.getNextRegister()));
+         }
       }
-   | ^((AND | OR) a=expression b=expression)
+   | ^(op=(AND | OR) a=expression b=expression)
       {
-         if (! ($a.t.isBool() && $b.t.isBool()))
+         if (! (a.t.isBool() && b.t.isBool()))
             error0("not a bool");
          $t=Type.boolType();
+
+         if (a.imm != null && b.imm != null) {
+            $imm = op.getType() == AND ? (a.imm & b.imm) : (a.imm | b.imm);
+         } else {
+            Integer lReg = a.reg;
+            Integer rReg = b.reg;
+            if (a.imm != null)
+               current.peek().addInstruction(InstructionFactory.loadi(a.imm, lReg = func.getNextRegister()));
+            if (b.imm != null)
+               current.peek().addInstruction(InstructionFactory.loadi(b.imm, rReg = func.getNextRegister()));
+            current.peek().addInstruction(InstructionFactory.bool(op.getType(), lReg, rReg, $reg = func.getNextRegister()));
+         }
       }
    | ^((LT | GT | NE | LE | GE) a=expression b=expression)
       {
-         if (! ($a.t.isInt() && $b.t.isInt()))
+         if (! (a.t.isInt() && b.t.isInt()))
             error0("numeric comparisons need ints");
          $t=Type.boolType();
       }
    | ^(EQ a=expression b=expression)
       {
-         if (! ($a.t.equals($b.t) && ($a.t.isInt() || $a.t.isBool())))
+         if (! (a.t.equals(b.t) && (a.t.isInt() || a.t.isBool())))
             error0("types are wrong");
          $t=Type.boolType();
+
+         if (a.imm != null && b.imm != null) {
+            $imm = a.imm.equals(b.imm) ? 1 : 0;
+         }
       }
-   | l=lvalue { $t=l.t; }
+   | l=lvalue { $t=l.t; $reg=l.reg; }
    | ^(NEG a=expression)
       {
          if (! a.t.isInt())
@@ -325,16 +410,19 @@ expression returns [Type t = null]
             error0("not a bool");
          $t=Type.boolType();
       }
-   | f=factor { $t=f.t; }
+   | f=factor { $t=f.t; $reg=f.reg; $imm=f.imm; }
    ;
 
-lvalue returns [Type t = null]
-   : ^(DOT (l=lvalue|f=factor) id=ID)
+lvalue returns [Type t = null, Integer reg = null]
+   : ^(DOT d=dot_load id=ID)
       {
-         Type tmp = l != null ? l.t : f.t;
-         if (! tmp.isStruct())
+         if (! d.t.isStruct())
             error0("can only dot from a struct");
-         $t=stypes.getStructMembers(tmp.getName()).get($id.text);
+
+         SymbolTable structTable = stypes.getStructMembers(d.t.getName());
+         $t=structTable.get($id.text);
+
+         current.peek().addInstruction(InstructionFactory.loadai(d.reg, structTable.getOffset($id.text), $reg = func.getNextRegister()));
       }
    | id=ID
       {
@@ -342,16 +430,57 @@ lvalue returns [Type t = null]
          SymbolTable stable = stables.peek();
          if (! stable.isDefined($id.text))
             error0("not defined: " + $id.text);
+
          $t=stable.get($id.text);
+         $reg = func.getVarRegister($id.text);
+
+         if ($reg == null) {
+            // this is a global variable
+            current.peek().addInstruction(InstructionFactory.loadGlobal($id.text, $reg = func.getNextRegister()));
+         }
       }
    ;
 
-factor returns [Type t = null]
+dot_load returns [Type t = null, Integer reg = null]
+   : ^(DOT d=dot_load id=ID)
+      {
+         if (! d.t.isStruct())
+            error0("can only dot from a struct");
+
+         SymbolTable structTable = stypes.getStructMembers(d.t.getName());
+         $t=structTable.get($id.text);
+
+         current.peek().addInstruction(InstructionFactory.arithmetic(PLUS, structTable.getOffset($id.text), d.reg, null, $reg = func.getNextRegister()));
+      }
+   | f=factor { $t=f.t; $reg=f.reg; }
+   | id=ID
+      {
+         System.out.println("looking up " + $id.text);
+         SymbolTable stable = stables.peek();
+         if (! stable.isDefined($id.text))
+            error0("not defined: " + $id.text);
+
+         $t=stable.get($id.text);
+         $reg = func.getVarRegister($id.text);
+
+         if ($reg == null) {
+            // this is a global variable
+            current.peek().addInstruction(InstructionFactory.globalAddr($id.text, $reg = func.getNextRegister()));
+         }
+      }
+   ;
+
+factor returns [Type t = null, Integer reg = null, Integer imm = null]
    : LPAREN! tmp=expression RPAREN! { $t = tmp.t; }
-   | i=invocation { System.out.println("invoking"); $t = i.t; }
-   | INTEGER { $t=Type.intType(); }
-   | TRUE { $t=Type.boolType(); }
-   | FALSE { $t=Type.boolType(); }
+   | i=invocation
+      {
+         System.out.println("invoking");
+         $t = i.t;
+         current.peek().addInstruction(InstructionFactory.loadRet($reg = func.getNextRegister()));
+      }
+   | INTEGER { $imm = Integer.parseInt($INTEGER.text); $t=Type.intType(); }
+   | TRUE { $imm = 1; $t=Type.boolType(); }
+   | FALSE { $imm = 0; $t=Type.boolType(); }
    | ^(NEW id=ID) { $t=Type.structType($id.text); }
    | NULL { $t=Type.structType("null"); }
    ;

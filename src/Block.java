@@ -38,6 +38,10 @@ public class Block {
          successors.add(next);
    }
 
+   public void addInstruction(Instruction inst) {
+      instructions.add(inst);
+   }
+
    public String toString() {
       StringWriter sw = new StringWriter();
 

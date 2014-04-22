@@ -1,6 +1,6 @@
 import java.util.List;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class SymbolTable {
    private class NameType {
@@ -16,7 +16,7 @@ public class SymbolTable {
    private static SymbolTable global;
 
    private SymbolTable last;
-   private HashMap<String, Type> locals;
+   private LinkedHashMap<String, Type> locals;
    private ArrayList<NameType> params;
 
    public SymbolTable() {
@@ -35,7 +35,7 @@ public class SymbolTable {
       }
 
       params = new ArrayList<NameType>();
-      locals = new HashMap<String, Type>();
+      locals = new LinkedHashMap<String, Type>();
    }
 
    private boolean isGlobal() {
@@ -99,5 +99,25 @@ public class SymbolTable {
       for (int i = 0; i < args.size(); i++)
          if (! params.get(i).type.equals(args.get(i)))
             throw new RuntimeException("argument " + i + " doesn't match. Required: " + params.get(i).type + ", given: " + args.get(i));
+   }
+
+   public List<String> getLocals() {
+      ArrayList<String> locs = new ArrayList<String>();
+      locs.addAll(locals.keySet());
+      return locs;
+   }
+
+   public int getOffset(String varName) {
+      if (! locals.containsKey(varName))
+         throw new RuntimeException(varName + " not defined in symbol table");
+      
+      int offset = 0;
+      for (String var : locals.keySet()) {
+         if (var.equals(varName))
+            return offset;
+         offset += 8;
+      }
+
+      return offset;
    }
 }
