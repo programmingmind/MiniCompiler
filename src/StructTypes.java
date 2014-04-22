@@ -23,4 +23,8 @@ public class StructTypes {
       System.out.println("Getting members for: " + name + ", isDefined: " + isDefined(name));
       return isDefined(name) ? vars.get(names.indexOf(name)) : null;
    }
+
+   public int getStructSize(String name) {
+      return isDefined(name) ? vars.get(names.indexOf(name)).getLocals().size() * 8 : 0;
+   }
 }

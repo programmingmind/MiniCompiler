@@ -168,6 +168,14 @@ return_type returns [Type t = null]
    | { System.out.println("void return"); $t = Type.voidType(); }
    ;
 
+store_val [int reg, lvalue_return l]
+   : {if (l.global) {
+         current.peek().addInstruction(InstructionFactory.storeGlobal(reg, l.name));
+      } else if (l.dl != null) {
+         current.peek().addInstruction(InstructionFactory.storeai(reg, l.dl.reg, stypes.getStructMembers(l.dl.t.getName()).getOffset(l.name)));
+      }}
+   ;
+
 statement returns [Type t = null]
    : b=block[false] { $t = b.t; }
    | ^(ASSIGN a=expression l=lvalue)
@@ -175,6 +183,14 @@ statement returns [Type t = null]
          System.out.println("Here I be assigning");
          if (! a.t.equals(l.t))
             error0("assignments need the same types");
+ 
+         int reg = func.getNextRegister();
+         if (a.imm != null) {
+            current.peek().addInstruction(InstructionFactory.loadi(a.imm, reg));
+         } else {
+            current.peek().addInstruction(InstructionFactory.mov(a.reg, reg));
+         }
+         store_val(reg, l);
       }
    | ^(PRINT a=expression ENDL?)
       {
@@ -196,6 +212,10 @@ statement returns [Type t = null]
       {
          if (! l.t.isInt())
             error0("can only read in ints");
+
+         int reg = func.getNextRegister();
+         current.peek().addInstruction(InstructionFactory.read(reg));
+         store_val(reg, l);
       }
    | ^(
          IF
@@ -230,14 +250,16 @@ statement returns [Type t = null]
       {
          if (! a.t.isStruct())
             error0("can only delete a struct");
+         current.peek().addInstruction(InstructionFactory.del(a.reg));
       }
    | r=ret
       {
          if (! r.t.equals(returns.peek()))
             error0("return type doesn't match");
          $t = r.t;
+         current.peek().addInstruction(InstructionFactory.ret());
       }
-   | i=invocation { System.out.println("invoking"); }
+   | invocation { System.out.println("invoking expression"); }
    ;
 
 block [boolean loop] returns [Type t = null]
@@ -278,15 +300,31 @@ statement_list returns [Type t = null]
    ;
  
 ret returns [Type t = null]
-   : ^(RETURN tmp=expression) { System.out.println("returned expression"); $t = tmp.t; }
-   | RETURN            { System.out.println("no return expression"); $t = Type.voidType(); }
+   : ^(RETURN tmp=expression)
+      {
+         System.out.println("returned expression");
+         $t = tmp.t;
+
+         if (tmp.imm != null)
+            current.peek().addInstruction(InstructionFactory.loadi(tmp.imm, tmp.reg = func.getNextRegister()));
+         current.peek().addInstruction(InstructionFactory.storeRet(tmp.reg));
+      }
+   | RETURN
+      {
+         System.out.println("no return expression");
+         $t = Type.voidType();
+      }
    ;
 
 invocation returns [Type t = null]
    : ^(INVOKE id=ID args=arguments)
       {
-         System.out.println("invoked " + $id.text);
          funcs.get($id.text).checkParams(args.argTypes);
+         for (int i = 0; i < args.registers.size(); i++)
+            current.peek().addInstruction(InstructionFactory.storeInArg(args.registers.get(i), funcs.get($id.text).getParamName(i), i));
+
+         current.peek().addInstruction(InstructionFactory.call(funcs.get($id.text).getEntry().getLabel()));
+         System.out.println("invoked " + $id.text);
          $t = funcs.get($id.text).getReturnType();
       }
    ;
@@ -376,11 +414,52 @@ expression returns [Type t = null, Integer reg = null, Integer imm = null]
             current.peek().addInstruction(InstructionFactory.bool(op.getType(), lReg, rReg, $reg = func.getNextRegister()));
          }
       }
-   | ^((LT | GT | NE | LE | GE) a=expression b=expression)
+   | ^(op=(LT | GT | NE | LE | GE) a=expression b=expression)
       {
          if (! (a.t.isInt() && b.t.isInt()))
             error0("numeric comparisons need ints");
          $t=Type.boolType();
+
+         if (a.imm != null && b.imm != null) {
+            switch (op.getType()) {
+               case LT:
+                  $imm = a.imm < b.imm ? 1 : 0;
+                  break;
+               case GT:
+                  $imm = a.imm > b.imm ? 1 : 0;
+                  break;
+               case NE:
+                  $imm = a.imm != b.imm ? 1 : 0;
+                  break;
+               case LE:
+                  $imm = a.imm <= b.imm ? 1 : 0;
+                  break;
+               case GE:
+                  $imm = a.imm >= b.imm ? 1 : 0;
+                  break;
+            }
+         } else if (a.imm == null && b.imm == null) {
+            $reg = func.getNextRegister();
+            current.peek().addInstruction(InstructionFactory.loadi(0, $reg));
+            current.peek().addInstruction(InstructionFactory.comp(a.reg, b.reg));
+            current.peek().addInstruction(InstructionFactory.ccmove(op.getType(), false, 1, $reg));
+         } else {
+            int tmpReg, tmpImm;
+            boolean reverse;
+            if (a.imm != null) {
+               tmpReg = b.reg;
+               tmpImm = a.imm;
+               reverse = true;
+            } else {
+               tmpReg = a.reg;
+               tmpImm = b.imm;
+               reverse = false;
+            }
+            $reg = func.getNextRegister();
+            current.peek().addInstruction(InstructionFactory.loadi(0, $reg));
+            current.peek().addInstruction(InstructionFactory.compi(tmpReg, tmpImm));
+            current.peek().addInstruction(InstructionFactory.ccmove(op.getType(), reverse, 1, $reg));
+         }
       }
    | ^(EQ a=expression b=expression)
       {
@@ -390,6 +469,24 @@ expression returns [Type t = null, Integer reg = null, Integer imm = null]
 
          if (a.imm != null && b.imm != null) {
             $imm = a.imm.equals(b.imm) ? 1 : 0;
+         } else if (a.imm == null && b.imm == null) {
+            $reg = func.getNextRegister();
+            current.peek().addInstruction(InstructionFactory.loadi(0, $reg));
+            current.peek().addInstruction(InstructionFactory.comp(a.reg, b.reg));
+            current.peek().addInstruction(InstructionFactory.ccmove(EQ, false, 1, $reg));
+         } else {
+            int tmpReg, tmpImm;
+            if (a.imm != null) {
+               tmpReg = b.reg;
+               tmpImm = a.imm;
+            } else {
+               tmpReg = a.reg;
+               tmpImm = b.imm;
+            }
+            $reg = func.getNextRegister();
+            current.peek().addInstruction(InstructionFactory.loadi(0, $reg));
+            current.peek().addInstruction(InstructionFactory.compi(tmpReg, tmpImm));
+            current.peek().addInstruction(InstructionFactory.ccmove(EQ, false, 1, $reg));
          }
       }
    | l=lvalue { $t=l.t; $reg=l.reg; }
@@ -398,17 +495,30 @@ expression returns [Type t = null, Integer reg = null, Integer imm = null]
          if (! a.t.isInt())
             error0("not an int");
          $t=Type.intType();
+
+         if (a.imm != null)
+            $imm = -a.imm;
+         else {
+            int tmp = func.getNextRegister();
+            current.peek().addInstruction(InstructionFactory.loadi(0, tmp));
+            current.peek().addInstruction(InstructionFactory.arithmetic(MINUS, null, tmp, a.reg, $reg = func.getNextRegister()));
+         }
       }
    | ^(NOT a=expression)
       {
          if (! a.t.isBool())
             error0("not a bool");
          $t=Type.boolType();
+
+         if (a.imm != null)
+            $imm = a.imm == 0 ? 1 : 0;
+         else
+            current.peek().addInstruction(InstructionFactory.xori(a.reg, 1, $reg = func.getNextRegister()));
       }
    | f=factor { $t=f.t; $reg=f.reg; $imm=f.imm; }
    ;
 
-lvalue returns [Type t = null, Integer reg = null]
+lvalue returns [Type t = null, Integer reg = null, String name = null, boolean global = false, dot_load_return dl = null]
    : ^(DOT d=dot_load id=ID)
       {
          if (! d.t.isStruct())
@@ -418,6 +528,8 @@ lvalue returns [Type t = null, Integer reg = null]
          $t=structTable.get($id.text);
 
          current.peek().addInstruction(InstructionFactory.loadai(d.reg, structTable.getOffset($id.text), $reg = func.getNextRegister()));
+         $dl = d;
+         $name = $id.text;
       }
    | id=ID
       {
@@ -429,9 +541,11 @@ lvalue returns [Type t = null, Integer reg = null]
          $t=stable.get($id.text);
          $reg = func.getVarRegister($id.text);
 
+         $name = $id.text;
+
          if ($reg == null) {
-            // this is a global variable
             current.peek().addInstruction(InstructionFactory.loadGlobal($id.text, $reg = func.getNextRegister()));
+            $global = true;
          }
       }
    ;
@@ -469,22 +583,38 @@ factor returns [Type t = null, Integer reg = null, Integer imm = null]
    : LPAREN! tmp=expression RPAREN! { $t = tmp.t; $reg = tmp.reg; $imm = tmp.imm; }
    | i=invocation
       {
-         System.out.println("invoking");
+         System.out.println("invoking factor");
          $t = i.t;
          current.peek().addInstruction(InstructionFactory.loadRet($reg = func.getNextRegister()));
       }
    | INTEGER { $imm = Integer.parseInt($INTEGER.text); $t=Type.intType(); }
    | TRUE { $imm = 1; $t=Type.boolType(); }
    | FALSE { $imm = 0; $t=Type.boolType(); }
-   | ^(NEW id=ID) { $t=Type.structType($id.text); }
-   | NULL { $t=Type.structType("null"); $imm = 0; }
+   | ^(NEW id=ID)
+      {
+         $t=Type.structType($id.text);
+         current.peek().addInstruction(InstructionFactory.newAlloc(stypes.getStructSize($id.text), $reg = func.getNextRegister()));
+      }
+   | NULL
+      {
+         $t=Type.structType("null");
+         $imm = 0; 
+      }
    ;
 
-arguments returns [ArrayList<Type> argTypes]
+arguments returns [ArrayList<Type> argTypes, ArrayList<Integer> registers]
    @init
    {
       $argTypes = new ArrayList<Type>();
+      $registers = new ArrayList<Integer>();
    }
-   : ^(ARGS (t=expression {$argTypes.add(t.t);})+)
+   : ^(ARGS (t=expression
+      {
+         $argTypes.add(t.t);
+         
+         if (t.imm != null)
+            current.peek().addInstruction(InstructionFactory.loadi(t.imm, t.reg = func.getNextRegister()));
+         $registers.add(t.reg);
+      })+)
    | ARGS
    ;

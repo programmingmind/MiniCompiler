@@ -58,6 +58,10 @@ public class InstructionFactory {
       return new Instruction((type == TypeCheck.AND ? "and" : "or") + " r" + left + ", r" + right + ", r" + result);
    }
 
+   public static Instruction xori(int reg, int imm, int result) {
+      return new Instruction("xori r" + reg + ", " + imm + ", r" + result);
+   }
+
    public static Instruction comp(int left, int right) {
       return new Instruction("comp r" + left + ", r" + right);
    }

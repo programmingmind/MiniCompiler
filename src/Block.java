@@ -33,6 +33,10 @@ public class Block {
       init(func, count.toString());
    }
 
+   public String getLabel() {
+      return label;
+   }
+
    public void addNext(Block next) {
       if (!successors.contains(next))
          successors.add(next);

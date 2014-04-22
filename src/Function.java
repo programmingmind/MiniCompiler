@@ -50,6 +50,10 @@ public class Function {
       vars.checkParams(args);
    }
 
+   public String getParamName(int num) {
+      return vars.getParamName(num);
+   }
+
    public int getNextRegister() {
       return currentRegister++;
    }

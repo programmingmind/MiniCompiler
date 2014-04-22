@@ -101,6 +101,10 @@ public class SymbolTable {
             throw new RuntimeException("argument " + i + " doesn't match. Required: " + params.get(i).type + ", given: " + args.get(i));
    }
 
+   public String getParamName(int num) {
+      return params.get(num).name;
+   }
+
    public List<String> getLocals() {
       ArrayList<String> locs = new ArrayList<String>();
       locs.addAll(locals.keySet());
