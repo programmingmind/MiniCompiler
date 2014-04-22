@@ -22,3 +22,5 @@ clean:
 	rm -f $(FILES)
 	rm -f bin/*.class
 	rm -f gen/*
+	rm -f dot/*.dot
+	rm -f iloc/*.il
