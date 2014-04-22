@@ -355,11 +355,6 @@ expression returns [Type t = null, Integer reg = null, Integer imm = null]
          } else if (b.imm != null) {
             current.peek().addInstruction(InstructionFactory.arithmetic(PLUS, -b.imm, a.reg, null, $reg = func.getNextRegister()));
          } else {
-            System.out.println("current: " + current);
-            System.out.println("current.peek(): " + current.peek());
-            System.out.println("func: " + func);
-            System.out.println("a reg: " + a.reg);
-            System.out.println("b reg: " + b.reg);
             current.peek().addInstruction(InstructionFactory.arithmetic(MINUS, null, a.reg, b.reg, $reg = func.getNextRegister()));
          }
       }
@@ -471,7 +466,7 @@ dot_load returns [Type t = null, Integer reg = null]
    ;
 
 factor returns [Type t = null, Integer reg = null, Integer imm = null]
-   : LPAREN! tmp=expression RPAREN! { $t = tmp.t; }
+   : LPAREN! tmp=expression RPAREN! { $t = tmp.t; $reg = tmp.reg; $imm = tmp.imm; }
    | i=invocation
       {
          System.out.println("invoking");
@@ -482,7 +477,7 @@ factor returns [Type t = null, Integer reg = null, Integer imm = null]
    | TRUE { $imm = 1; $t=Type.boolType(); }
    | FALSE { $imm = 0; $t=Type.boolType(); }
    | ^(NEW id=ID) { $t=Type.structType($id.text); }
-   | NULL { $t=Type.structType("null"); }
+   | NULL { $t=Type.structType("null"); $imm = 0; }
    ;
 
 arguments returns [ArrayList<Type> argTypes]
