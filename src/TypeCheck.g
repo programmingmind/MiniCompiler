@@ -46,7 +46,7 @@ error [int line, String text]
 verify [boolean outputIloc, String fileName]
    : program [outputIloc, fileName]
       {
-         System.out.println("Type checking passed");
+         System.out.println("Type checking passed and iloc instructions generated");
          if (!funcs.isDefined("main"))
             System.err.println("WARNING: missing main()");
       }
