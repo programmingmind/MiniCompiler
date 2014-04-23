@@ -225,7 +225,7 @@ store_val [int reg, lvalue_return l]
    ;
 
 statement returns [Type t = null]
-   : b=block[false]
+   : b=block
       {
          $t = b.t;
       }
@@ -273,15 +273,13 @@ statement returns [Type t = null]
          {
             next.push(new Block(func.getName()));
          }
-         a=expression b=block[false] b2=block[false]?
+         a=expression b=block b2=block?
       )
       {
          if (! a.t.isBool())
             error0("if statements need bool expression");
          if (b2 != null && b.t != null && b.t.equals(b2.t))
             $t = b.t;
-         if (b2 == null)
-            current.peek().addNext(next.peek());
 
          if (a.imm != null) {
             boolean flag = a.imm != 0;
@@ -297,15 +295,24 @@ statement returns [Type t = null]
             current.peek().addInstruction(InstructionFactory.ccbranch(EQ, false, b.blk.getLabel(), (b2 == null ? next.peek() : b2.blk).getLabel()));
          }
 
+         current.peek().addNext(b.blk);
+         b.last.addNext(next.peek(), true);
+         if (b2 == null) {
+            current.peek().addNext(next.peek(), true);
+         } else {
+            current.peek().addNext(b2.blk);
+            b.last.addInstruction(InstructionFactory.jump(next.peek().getLabel()));
+            b2.last.addNext(next.peek(), true);
+         }
+
          current.push(next.pop());
       }
    | ^(
          token=WHILE
          {
             next.push(new Block(func.getName()));
-            current.peek().addNext(next.peek());
          }
-         a=expression b=block[true] e=expression
+         a=expression b=block e=expression
       )
       {
          if (! (a.t.isBool() && e.t.isBool()))
@@ -329,6 +336,10 @@ statement returns [Type t = null]
             b.last.addInstruction(InstructionFactory.ccbranch(EQ, false, b.blk.getLabel(), next.peek().getLabel()));
          }
 
+         b.last.addNext(b.blk);
+         b.last.addNext(next.peek(), true);
+         current.peek().addNext(b.blk);
+         current.peek().addNext(next.peek(), true);
          current.push(next.pop());
       }
    | ^(DELETE a=expression)
@@ -347,7 +358,7 @@ statement returns [Type t = null]
    | invocation { System.out.println("invoking expression"); }
    ;
 
-block [boolean loop] returns [Type t = null, Block blk = null, Block last = null]
+block returns [Type t = null, Block blk = null, Block last = null]
    @init
    {
       Block blk = new Block(func.getName());
@@ -364,11 +375,7 @@ block [boolean loop] returns [Type t = null, Block blk = null, Block last = null
       {
          System.out.println("Heres a block");
          $t = sl.t;
-         if (loop)
-            current.peek().addNext(blk);
-         $last = current.peek();
-
-         current.pop().addNext(next.peek());
+         $last = current.pop();
       }
    ;
 
@@ -652,7 +659,7 @@ dot_load returns [Type t = null, Integer reg = null]
          SymbolTable structTable = stypes.getStructMembers(d.t.getName());
          $t=structTable.get($id.text);
 
-         current.peek().addInstruction(InstructionFactory.arithmetic(PLUS, structTable.getOffset($id.text), d.reg, null, $reg = func.getNextRegister()));
+         current.peek().addInstruction(InstructionFactory.loadai(d.reg, structTable.getOffset($id.text), $reg = func.getNextRegister()));
       }
    | f=factor { $t=f.t; $reg=f.reg; }
    | id=ID

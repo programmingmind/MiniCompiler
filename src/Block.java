@@ -2,6 +2,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class Block {
    private static HashMap<String, Integer> counts;
@@ -10,12 +11,14 @@ public class Block {
    private String label;
    private ArrayList<Block> predecessors;
    private ArrayList<Block> successors;
+   private HashSet<Block> endBranchSuccessors;
 
    private void init(String func, String which) {
       this.label = func + "_" + which;
       instructions = new ArrayList<Instruction>();
       predecessors = new ArrayList<Block>();
       successors = new ArrayList<Block>();
+      endBranchSuccessors = new HashSet<Block>();
    }
 
    public Block(String func, String which) {
@@ -38,8 +41,18 @@ public class Block {
    }
 
    public void addNext(Block next) {
+      addNext(next, false);
+   }
+
+   public void addNext(Block next, boolean endBranch) {
       if (!successors.contains(next))
          successors.add(next);
+      if (endBranch)
+         endBranchSuccessors.add(next);
+   }
+
+   public boolean doesEndBranch(Block b) {
+      return endBranchSuccessors.contains(b);
    }
 
    public void addInstruction(Instruction inst) {

@@ -129,8 +129,17 @@ public class Function {
          List<Block> successors = tmp.getLinks();
          for (int i = successors.size() - 1; i >= 0; i--) {
             Block b = successors.get(i);
-            if (toVisit.search(b) == -1 && !visited.contains(b) && b != exit)
+            if (toVisit.search(b) == -1 && !visited.contains(b) && b != exit) {
+               Block[] keep = new Block[0];
+               if (!toVisit.empty() && tmp.doesEndBranch(b)) {
+                  int len = successors.size() - i;
+                  keep = new Block[len];
+                  while (len > 0)
+                     keep[keep.length - len--] = toVisit.pop();
+               }
                toVisit.push(b);
+               for (Block k : keep)  toVisit.push(k);
+            }
          }
 
          sw.append(tmp.toString());
