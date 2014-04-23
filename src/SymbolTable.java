@@ -3,21 +3,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 public class SymbolTable {
-   private class NameType {
-      public String name;
-      public Type type;
-
-      public NameType(String name, Type type) {
-         this.name = name;
-         this.type = type;
-      }
-   }
-
    private static SymbolTable global;
 
    private SymbolTable last;
+   private LinkedHashMap<String, Type> params;
    private LinkedHashMap<String, Type> locals;
-   private ArrayList<NameType> params;
 
    public SymbolTable() {
       this(null);
@@ -34,7 +24,7 @@ public class SymbolTable {
          this.last = last == null ? global : last;
       }
 
-      params = new ArrayList<NameType>();
+      params = new LinkedHashMap<String, Type>();
       locals = new LinkedHashMap<String, Type>();
    }
 
@@ -43,10 +33,7 @@ public class SymbolTable {
    }
 
    public boolean isFormal(String name) {
-      for (NameType nt : params)
-         if (nt.name.equals(name))
-            return true;
-      return false;
+      return params.containsKey(name);
    }
 
    public boolean redef(String name) {
@@ -62,7 +49,7 @@ public class SymbolTable {
          throw new RuntimeException(name + " already defined");
 
       System.out.println("putting in parameter " + name + " : " + type);
-      params.add(new NameType(name, type));
+      params.put(name, type);
    }
 
    public void put(String name, Type type) {
@@ -78,10 +65,8 @@ public class SymbolTable {
    }
 
    public Type get(String name) {
-      if (isFormal(name))
-         for (NameType nt : params)
-            if (nt.name.equals(name))
-               return nt.type;
+      if (params.containsKey(name))
+         return params.get(name);
 
       if (locals.containsKey(name))
          return locals.get(name);
@@ -96,19 +81,19 @@ public class SymbolTable {
       if (args.size() != params.size())
          throw new RuntimeException("number of args/params don't match");
 
+      List<String> paramNames = getParamNames();
       for (int i = 0; i < args.size(); i++)
-         if (! params.get(i).type.equals(args.get(i)))
-            throw new RuntimeException("argument " + i + " doesn't match. Required: " + params.get(i).type + ", given: " + args.get(i));
+         if (! params.get(paramNames.get(i)).equals(args.get(i)))
+            throw new RuntimeException("argument " + i + "(" + paramNames.get(i) + ") doesn't match. Required: " + params.get(paramNames.get(i)) + ", given: " + args.get(i));
    }
 
    public String getParamName(int num) {
-      return params.get(num).name;
+      return getParamNames().get(num);
    }
 
-   public String[] getParamNames() {
-      String[] names = new String[params.size()];
-      for (int i = 0; i < params.size(); i++)
-         names[i] = params.get(i).name;
+   public List<String> getParamNames() {
+      ArrayList<String> names = new ArrayList<String>();
+      names.addAll(params.keySet());
       return names;
    }
 
