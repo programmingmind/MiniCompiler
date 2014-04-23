@@ -95,7 +95,7 @@ public class InstructionFactory {
    }
 
    public static Instruction loadRet(int reg) {
-      return new Instruction("loadret " + reg);
+      return new Instruction("loadret r" + reg);
    }
 
    public static Instruction formalAddr(String var, int num, int reg) {
