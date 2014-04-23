@@ -30,9 +30,11 @@ public class Mini
    }
 
    private static final String DISPLAYAST = "-displayAST";
+   private static final String OUTPUTILOC = "-dumpIL";
 
    private static String _inputFile = null;
    private static boolean _displayAST = false;
+   private static boolean _outputIloc = false;
 
    private static void parseParameters(String [] args)
    {
@@ -41,6 +43,9 @@ public class Mini
          if (args[i].equals(DISPLAYAST))
          {
             _displayAST = true;
+         }
+         else if (args[i].equals(OUTPUTILOC)) {
+            _outputIloc = true;
          }
          else if (args[i].charAt(0) == '-')
          {
@@ -87,7 +92,7 @@ public class Mini
          nodes.setTokenStream(tokens);
          TypeCheck tparser = new TypeCheck(nodes);
 
-         tparser.verify();
+         tparser.verify(_outputIloc, _inputFile);
       }
       catch (org.antlr.runtime.RecognitionException e)
       {

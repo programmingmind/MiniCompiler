@@ -49,9 +49,9 @@ public class Block {
    public String toString() {
       StringWriter sw = new StringWriter();
 
-      sw.append("BLOCK: " + label + "\n");
+      sw.append(label + ":\n");
       for (Instruction instruction : instructions)
-         sw.append(instruction + "\n");
+         sw.append("\t" + instruction + "\n");
 
       return sw.toString();
    }

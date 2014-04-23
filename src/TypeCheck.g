@@ -8,6 +8,11 @@ options
 
 @header
 {
+   import java.io.BufferedWriter;
+   import java.io.File;
+   import java.io.FileWriter;
+   import java.io.IOException;
+
    import java.util.ArrayList;
    import java.util.Map;
    import java.util.HashMap;
@@ -24,6 +29,10 @@ options
    private Stack<Type> returns;
    private Stack<Block> next;
    private Stack<Block> current;
+
+   private File file = null;
+   private FileWriter fw = null;
+   private BufferedWriter bw = null;
 }
 
 error0 [String text]
@@ -34,8 +43,8 @@ error [int line, String text]
    : { if (true) throw new RuntimeException($line + " : " + $text); }
    ;
 
-verify
-   : program
+verify [boolean outputIloc, String fileName]
+   : program [outputIloc, fileName]
       {
          System.out.println("Type checking passed");
          if (!funcs.isDefined("main"))
@@ -44,7 +53,7 @@ verify
    | { System.out.println("not a valid AST"); }
    ;
 
-program
+program [boolean outputIloc, String fileName]
    @init
    {
       stables = new Stack<SymbolTable>();
@@ -52,8 +61,34 @@ program
       SymbolTable stable = new SymbolTable();
       stables.push(stable);
       returns.push(Type.voidType());
+
+      if (outputIloc) {
+         String name = fileName.contains(".") ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
+         name = name.contains("/") ? name.substring(name.lastIndexOf("/") + 1) : name;
+         System.out.println("saving to iloc/" + name + ".il");
+         file = new File("iloc/" + name + ".il");
+         try {
+            if (!file.exists())
+               file.createNewFile();
+    
+            fw = new FileWriter(file.getAbsoluteFile());
+            bw = new BufferedWriter(fw);
+         } catch (IOException ioe) {
+            ioe.printStackTrace();
+         }
+      }
    }
    : ^(PROGRAM types[stable] declarations[stable] functions)
+      {
+         if (outputIloc) {
+            try {
+               bw.close();
+               fw.close();
+            } catch (IOException ioe) {
+               ioe.printStackTrace();
+            }
+         }
+      }
    ;
 
 types [SymbolTable stable]
@@ -155,7 +190,16 @@ function
          stables.pop();
          returns.pop();
          current.peek().addNext(func.getExit());
-         func.saveDot();
+
+         if (bw != null) {
+            func.saveDot();
+
+            try {
+               bw.write(sl.iloc);
+            } catch (IOException ioe) {
+              ioe.printStackTrace();
+            }
+         }
       }
    ;
 
@@ -176,8 +220,12 @@ store_val [int reg, lvalue_return l]
       }}
    ;
 
-statement returns [Type t = null]
-   : b=block[false] { $t = b.t; }
+statement returns [Type t = null, String iloc=""]
+   : b=block[false]
+      {
+         $t = b.t;
+         $iloc += b.blk;
+      }
    | ^(ASSIGN a=expression l=lvalue)
       {
          System.out.println("Here I be assigning");
@@ -246,19 +294,24 @@ statement returns [Type t = null]
             current.peek().addInstruction(InstructionFactory.ccbranch(EQ, false, b.blk.getLabel(), (b2 == null ? next.peek() : b2.blk).getLabel()));
          }
 
+         $iloc += current.peek();
+         $iloc += b.blk;
+         if (b2 != null)
+            $iloc += b2.blk;
+
          current.push(next.pop());
       }
    | ^(
          token=WHILE
          {
             next.push(new Block(func.getName()));
+            current.peek().addNext(next.peek());
          }
          a=expression b=block[true] e=expression
       )
       {
          if (! (a.t.isBool() && e.t.isBool()))
             error0("while statements need bool expressions");
-         current.peek().addNext(next.peek());
 
          if (a.imm != null) {
             boolean flag = a.imm != 0;
@@ -277,6 +330,9 @@ statement returns [Type t = null]
             b.last.addInstruction(InstructionFactory.compi(e.reg, 1));
             b.last.addInstruction(InstructionFactory.ccbranch(EQ, false, b.blk.getLabel(), next.peek().getLabel()));
          }
+
+         $iloc += current.peek();
+         $iloc += b.blk;
 
          current.push(next.pop());
       }
@@ -316,16 +372,19 @@ block [boolean loop] returns [Type t = null, Block blk = null, Block last = null
          if (loop)
             current.peek().addNext(blk);
          $last = current.peek();
+
          current.pop().addNext(next.peek());
       }
    ;
 
-statement_list returns [Type t = null]
+statement_list returns [Type t = null, String iloc=""]
    : ^(
          STMTS
          (
             tmp=statement
             {
+               $iloc += tmp.iloc;
+
                if ($t != null)
                   System.err.println("WARNING: statements after return");
                else
