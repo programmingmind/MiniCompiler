@@ -187,6 +187,10 @@ function
       {
          if (sl.t == null && !returns.peek().equals(Type.voidType()))
             error0($id.text + " missing return value");
+
+         if (sl.t == null)
+            func.getExit().addInstruction(InstructionFactory.ret());
+
          stables.pop();
          returns.pop();
          current.peek().addNext(func.getExit());
@@ -195,7 +199,7 @@ function
             func.saveDot();
 
             try {
-               bw.write(sl.iloc);
+               bw.write(sl.iloc + current.peek() + func.getExit());
             } catch (IOException ioe) {
               ioe.printStackTrace();
             }
