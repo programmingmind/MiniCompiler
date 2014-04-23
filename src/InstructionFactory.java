@@ -67,7 +67,7 @@ public class InstructionFactory {
    }
 
    public static Instruction compi(int reg, int imm) {
-      return new Instruction("comp r" + reg + ", " + imm);
+      return new Instruction("compi r" + reg + ", " + imm);
    }
 
    public static Instruction ccbranch(int type, boolean reverse, String label1, String label2) {    
