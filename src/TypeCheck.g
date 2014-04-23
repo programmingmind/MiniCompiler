@@ -216,6 +216,10 @@ return_type returns [Type t = null]
    | { System.out.println("void return"); $t = Type.voidType(); }
    ;
 
+store_reg [lvalue_return l] returns [int reg]
+   : {$reg = (l.global || l.dl != null) ? func.getNextRegister() : l.reg;}
+   ;
+
 store_val [int reg, lvalue_return l]
    : {if (l.global) {
          current.peek().addInstruction(InstructionFactory.storeGlobal(reg, l.name));
@@ -241,7 +245,7 @@ statement returns [Type t = null]
          if (! a.t.equals(l.t))
             error($ASSIGN.line, "assignments need the same types (" + l.t + " vs " + a.t + ")");
  
-         int reg = func.getNextRegister();
+         int reg = store_reg(l).reg;
          if (a.imm != null) {
             current.peek().addInstruction(InstructionFactory.loadi(a.imm, reg));
          } else {
@@ -270,7 +274,7 @@ statement returns [Type t = null]
          if (! l.t.isInt())
             error0("can only read in ints");
 
-         int reg = func.getNextRegister();
+         int reg = store_reg(l).reg;
          current.peek().addInstruction(InstructionFactory.read(reg));
          store_val(reg, l);
       }
