@@ -199,7 +199,7 @@ function
             func.saveDot();
 
             try {
-               bw.write(sl.iloc + current.peek() + func.getExit());
+               bw.write(func + "\n");
             } catch (IOException ioe) {
               ioe.printStackTrace();
             }
@@ -224,11 +224,10 @@ store_val [int reg, lvalue_return l]
       }}
    ;
 
-statement returns [Type t = null, String iloc=""]
+statement returns [Type t = null]
    : b=block[false]
       {
          $t = b.t;
-         $iloc += b.blk;
       }
    | ^(ASSIGN a=expression l=lvalue)
       {
@@ -298,11 +297,6 @@ statement returns [Type t = null, String iloc=""]
             current.peek().addInstruction(InstructionFactory.ccbranch(EQ, false, b.blk.getLabel(), (b2 == null ? next.peek() : b2.blk).getLabel()));
          }
 
-         $iloc += current.peek();
-         $iloc += b.blk;
-         if (b2 != null)
-            $iloc += b2.blk;
-
          current.push(next.pop());
       }
    | ^(
@@ -334,9 +328,6 @@ statement returns [Type t = null, String iloc=""]
             b.last.addInstruction(InstructionFactory.compi(e.reg, 1));
             b.last.addInstruction(InstructionFactory.ccbranch(EQ, false, b.blk.getLabel(), next.peek().getLabel()));
          }
-
-         $iloc += current.peek();
-         $iloc += b.blk;
 
          current.push(next.pop());
       }
@@ -381,14 +372,12 @@ block [boolean loop] returns [Type t = null, Block blk = null, Block last = null
       }
    ;
 
-statement_list returns [Type t = null, String iloc=""]
+statement_list returns [Type t = null]
    : ^(
          STMTS
          (
             tmp=statement
             {
-               $iloc += tmp.iloc;
-
                if ($t != null)
                   System.err.println("WARNING: statements after return");
                else

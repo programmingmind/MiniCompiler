@@ -2,9 +2,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
+
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Stack;
 
 public class Function {
    private String name;
@@ -110,6 +114,30 @@ public class Function {
       } catch (IOException e) {
          ;
       }
+   }
+
+   public String toString() {
+      StringWriter sw = new StringWriter();
+      Stack<Block> toVisit = new Stack<Block>();
+      HashSet<Block> visited = new HashSet<Block>();
+
+      toVisit.push(entry);
+      while (! toVisit.empty()) {
+         Block tmp = toVisit.pop();
+         visited.add(tmp);
+
+         List<Block> successors = tmp.getLinks();
+         for (int i = successors.size() - 1; i >= 0; i--) {
+            Block b = successors.get(i);
+            if (toVisit.search(b) == -1 && !visited.contains(b) && b != exit)
+               toVisit.push(b);
+         }
+
+         sw.append(tmp.toString());
+      }
+      sw.append(exit.toString());
+
+      return sw.toString();
    }
 
    public void cleanBlocks() {
