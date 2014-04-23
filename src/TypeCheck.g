@@ -218,7 +218,7 @@ statement returns [Type t = null]
          store_val(reg, l);
       }
    | ^(
-         IF
+         token=IF
          {
             next.push(new Block(func.getName()));
          }
@@ -231,19 +231,53 @@ statement returns [Type t = null]
             $t = b.t;
          if (b2 == null)
             current.peek().addNext(next.peek());
+
+         if (a.imm != null) {
+            boolean flag = a.imm != 0;
+            System.err.println("WARNING: if statement always " + flag + " at line " + $token.line);
+            if (flag)
+               current.peek().addInstruction(InstructionFactory.jump(b.blk.getLabel()));
+            else if (b2 != null)
+               current.peek().addInstruction(InstructionFactory.jump(b2.blk.getLabel()));
+            else
+               current.peek().addInstruction(InstructionFactory.jump(next.peek().getLabel()));
+         } else {
+            current.peek().addInstruction(InstructionFactory.compi(a.reg, 1));
+            current.peek().addInstruction(InstructionFactory.ccbranch(EQ, false, b.blk.getLabel(), (b2 == null ? next.peek() : b2.blk).getLabel()));
+         }
+
          current.push(next.pop());
       }
    | ^(
-         WHILE
+         token=WHILE
          {
             next.push(new Block(func.getName()));
          }
-         a=expression block[true] e=expression
+         a=expression b=block[true] e=expression
       )
       {
          if (! (a.t.isBool() && e.t.isBool()))
             error0("while statements need bool expressions");
          current.peek().addNext(next.peek());
+
+         if (a.imm != null) {
+            boolean flag = a.imm != 0;
+            System.err.println("WARNING: while statement always " + flag + " at line " + $token.line);
+            if (flag) {
+               current.peek().addInstruction(InstructionFactory.jump(b.blk.getLabel()));
+               b.last.addInstruction(InstructionFactory.jump(b.blk.getLabel()));
+            }
+            else {
+               current.peek().addInstruction(InstructionFactory.jump(next.peek().getLabel()));
+               b.last.addInstruction(InstructionFactory.jump(next.peek().getLabel()));
+            }
+         } else {
+            current.peek().addInstruction(InstructionFactory.compi(a.reg, 1));
+            current.peek().addInstruction(InstructionFactory.ccbranch(EQ, false, b.blk.getLabel(), next.peek().getLabel()));
+            b.last.addInstruction(InstructionFactory.compi(e.reg, 1));
+            b.last.addInstruction(InstructionFactory.ccbranch(EQ, false, b.blk.getLabel(), next.peek().getLabel()));
+         }
+
          current.push(next.pop());
       }
    | ^(DELETE a=expression)
@@ -262,10 +296,11 @@ statement returns [Type t = null]
    | invocation { System.out.println("invoking expression"); }
    ;
 
-block [boolean loop] returns [Type t = null]
+block [boolean loop] returns [Type t = null, Block blk = null, Block last = null]
    @init
    {
       Block blk = new Block(func.getName());
+      $blk = blk;
    }
    : ^(
          BLOCK
@@ -280,6 +315,7 @@ block [boolean loop] returns [Type t = null]
          $t = sl.t;
          if (loop)
             current.peek().addNext(blk);
+         $last = current.peek();
          current.pop().addNext(next.peek());
       }
    ;
