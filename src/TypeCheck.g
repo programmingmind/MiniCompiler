@@ -236,7 +236,7 @@ statement returns [Type t = null]
       {
          $t = b.t;
          b.last.addNext(next.peek());
-         current.peek().addNext(b.blk);
+         current.pop().addNext(b.blk);
          current.push(next.pop());
       }
    | ^(ASSIGN a=expression l=lvalue)
@@ -314,7 +314,7 @@ statement returns [Type t = null]
             b.last.addInstruction(InstructionFactory.jump(next.peek().getLabel()));
             b2.last.addNext(next.peek(), true);
          }
-
+         current.pop();
          current.push(next.pop());
       }
    | ^(
@@ -350,6 +350,7 @@ statement returns [Type t = null]
          b.last.addNext(next.peek(), true);
          current.peek().addNext(b.blk);
          current.peek().addNext(next.peek(), true);
+         current.pop();
          current.push(next.pop());
       }
    | ^(DELETE a=expression)
