@@ -54,6 +54,16 @@ public class Function {
       return vars.getParamName(num);
    }
 
+   public int getParamIndex(String name) {
+      int ndx = 0;
+      for (String s : vars.getParamNames()) {
+         if (s.equals(name))
+            return ndx;
+         ++ndx;
+      }
+      throw new RuntimeException("param " + name + " doesn't exist");
+   }
+
    public int getNextRegister() {
       return currentRegister++;
    }

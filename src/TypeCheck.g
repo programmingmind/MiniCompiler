@@ -639,8 +639,13 @@ lvalue returns [Type t = null, Integer reg = null, String name = null, boolean g
          $name = $id.text;
 
          if ($reg == null) {
-            current.peek().addInstruction(InstructionFactory.loadGlobal($id.text, $reg = func.getNextRegister()));
-            $global = true;
+            if (stable.isFormal($id.text)) {
+               func.putVarRegister($id.text, $reg = func.getNextRegister());
+               current.peek().addInstruction(InstructionFactory.loadArg($id.text, func.getParamIndex($id.text), $reg));
+            } else {
+               current.peek().addInstruction(InstructionFactory.loadGlobal($id.text, $reg = func.getNextRegister()));
+               $global = true;
+            }
          }
       }
    ;
@@ -668,8 +673,12 @@ dot_load returns [Type t = null, Integer reg = null]
          $reg = func.getVarRegister($id.text);
 
          if ($reg == null) {
-            // this is a global variable
-            current.peek().addInstruction(InstructionFactory.globalAddr($id.text, $reg = func.getNextRegister()));
+            if (stable.isFormal($id.text)) {
+               func.putVarRegister($id.text, $reg = func.getNextRegister());
+               current.peek().addInstruction(InstructionFactory.loadArg($id.text, func.getParamIndex($id.text), $reg));
+            }
+            else
+               current.peek().addInstruction(InstructionFactory.globalAddr($id.text, $reg = func.getNextRegister()));
          }
       }
    ;

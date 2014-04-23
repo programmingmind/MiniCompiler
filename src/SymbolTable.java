@@ -105,6 +105,13 @@ public class SymbolTable {
       return params.get(num).name;
    }
 
+   public String[] getParamNames() {
+      String[] names = new String[params.size()];
+      for (int i = 0; i < params.size(); i++)
+         names[i] = params.get(i).name;
+      return names;
+   }
+
    public List<String> getLocals() {
       ArrayList<String> locs = new ArrayList<String>();
       locs.addAll(locals.keySet());
