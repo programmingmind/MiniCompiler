@@ -127,7 +127,7 @@ public class InstructionFactory {
    }
 
    public static Instruction storeRet(int reg) {
-      return new Instruction("storeret " + reg);
+      return new Instruction("storeret r" + reg);
    }
 
    public static Instruction call(String label) {
