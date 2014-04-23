@@ -225,9 +225,15 @@ store_val [int reg, lvalue_return l]
    ;
 
 statement returns [Type t = null]
-   : b=block
+   :  {
+         next.push(new Block(func.getName()));
+      }
+      b=block
       {
          $t = b.t;
+         b.last.addNext(next.peek());
+         current.peek().addNext(b.blk);
+         current.push(next.pop());
       }
    | ^(ASSIGN a=expression l=lvalue)
       {
