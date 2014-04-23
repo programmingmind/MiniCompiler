@@ -38,6 +38,8 @@ public class Type {
             return "int";
          else if (val == BOOL)
             return "bool";
+         else if (val == NONE)
+            return "none";
       }
       return "void";
    }
@@ -48,7 +50,7 @@ public class Type {
       if (isStruct != other.isStruct)
          return false;
       if (isStruct)
-         return name.equals(other.name) || other.name.equals("null");
+         return name.equals(other.name) || other.name.equals("null") || name.equals("null");
       else
          return val == other.val;
    }

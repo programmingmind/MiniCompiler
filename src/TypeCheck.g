@@ -239,7 +239,7 @@ statement returns [Type t = null]
       {
          System.out.println("Here I be assigning");
          if (! a.t.equals(l.t))
-            error0("assignments need the same types");
+            error($ASSIGN.line, "assignments need the same types (" + l.t + " vs " + a.t + ")");
  
          int reg = func.getNextRegister();
          if (a.imm != null) {
@@ -564,8 +564,8 @@ expression returns [Type t = null, Integer reg = null, Integer imm = null]
       }
    | ^(EQ a=expression b=expression)
       {
-         if (! (a.t.equals(b.t) && (a.t.isInt() || a.t.isBool())))
-            error0("types are wrong");
+         if (! (a.t.equals(b.t)))
+            error($EQ.line, "types are wrong");
          $t=Type.boolType();
 
          if (a.imm != null && b.imm != null) {
