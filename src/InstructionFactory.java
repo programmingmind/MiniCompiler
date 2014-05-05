@@ -122,13 +122,13 @@ public class InstructionFactory {
             return new Instruction(iloc,
                                     new int[] {left, right},
                                     result,
-                                    asm + "l %r" + result + ", %r" + right);
+                                    asm + "l %r" + right + ", %r" + result);
          } else if (right == result) {
             if (type == TypeCheck.PLUS || type == TypeCheck.TIMES) {
                return new Instruction(iloc,
                                        new int[] {left, right},
                                        result,
-                                       asm + "l %r" + result + ", %r" + left);
+                                       asm + "l %r" + left + ", %r" + result);
             } else {
                return new Instruction(iloc,
                                        new int[] {left, right},
@@ -140,20 +140,20 @@ public class InstructionFactory {
                                     new int[] {left, right},
                                     result,
                                     "mov %r" + left + ", %r" + result,
-                                    asm + "l %r" + result + ", %r" + right);
+                                    asm + "l %r" + right + ", %r" + result);
          }
       } else {
          if (left == result) {
             return new Instruction(iloc,
                                     new int[] {left},
                                     result,
-                                    (type == TypeCheck.PLUS ? "addl" : "subl") + " %r" + result + ", $" + imm);
+                                    (type == TypeCheck.PLUS ? "addl" : "subl") + " $" + imm + ", %r" + result);
          } else {
             return new Instruction(iloc,
                                     new int[] {left},
                                     result,
                                     "mov %r" + left + ", %r" + result,
-                                    (type == TypeCheck.PLUS ? "addl" : "subl") + " %r" + result + ", $" + imm);
+                                    (type == TypeCheck.PLUS ? "addl" : "subl") + " $" + imm + ", %r" + result);
          }
       }
    }
@@ -164,18 +164,18 @@ public class InstructionFactory {
          return new Instruction(iloc,
                                  new int[] {left, right},
                                  result,
-                                 (type == TypeCheck.AND ? "and" : "or") + " %r" + result + ", %r" + right);
+                                 (type == TypeCheck.AND ? "and" : "or") + " %r" + right + ", %r" + result);
       } else if (right == result) {
          return new Instruction(iloc,
                                  new int[] {left, right},
                                  result,
-                                 (type == TypeCheck.AND ? "and" : "or") + " %r" + result + ", %r" + left);
+                                 (type == TypeCheck.AND ? "and" : "or") + " %r" + left + ", %r" + result);
       } else {
          return new Instruction(iloc,
                                  new int[] {left, right},
                                  result,
-                                 "mov %r" + left + ", %r" + right,
-                                 (type == TypeCheck.AND ? "and" : "or") + " %r" + result + ", %r" + right);
+                                 "mov %r" + left + ", %r" + result,
+                                 (type == TypeCheck.AND ? "and" : "or") + " %r" + right + ", %r" + result);
       }
    }
 
@@ -184,12 +184,12 @@ public class InstructionFactory {
          return new Instruction("xori r" + reg + ", " + imm + ", r" + result,
                                  new int[] {reg},
                                  result,
-                                 "xor %r" + result + ", $" + imm);
+                                 "xor $" + imm + ", %r" + result);
       } else {
          return new Instruction("xori r" + reg + ", " + imm + ", r" + result,
                                  new int[] {reg},
                                  result,
-                                 "xor %r" + result + ", $" + imm);
+                                 "xor $" + imm + ", %r" + result);
       }
    }
 
