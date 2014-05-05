@@ -60,11 +60,19 @@ public class Block {
    }
 
    public String[] getCode() {
+      return getCode(new String[] {});
+   }
+
+   public String[] getCode(String[] prefix) {
       StringWriter iloc = new StringWriter();
       StringWriter asm = new StringWriter();
 
       iloc.append(label + ":\n");
       asm.append(label + ":\n");
+
+      for (String s : prefix)
+         asm.append("\t" + s + "\n");
+      
       for (Instruction instruction : instructions) {
          iloc.append("\t" + instruction.toIloc() + "\n");
          for (String s : instruction.toAssembly())

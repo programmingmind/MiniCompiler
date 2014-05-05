@@ -127,8 +127,8 @@ public class Function {
       HashSet<Block> visited = new HashSet<Block>();
       String[] code;
 
-      for (String s : InstructionFactory.functionStart(name).toAssembly())
-         asm.append("\t" + s + "\n");
+      String[] prefix = InstructionFactory.functionStart(name).toAssembly();
+
 
       toVisit.push(entry);
       while (! toVisit.empty()) {
@@ -152,7 +152,7 @@ public class Function {
             }
          }
 
-         code = tmp.getCode();
+         code = tmp == entry ? tmp.getCode(prefix) : tmp.getCode();
          iloc.append(code[0]);
          asm.append(code[1]);
       }
