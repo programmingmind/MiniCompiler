@@ -195,7 +195,8 @@ public class InstructionFactory {
       return new Instruction("cbr" + getCompOp(type, reverse) + " ccr, " + label1 + ", " + label2,
                               new int[] {},
                               null,
-                              "NOT SUPPORTED YET");
+                              "j" + getCompAsmOp(type, reverse) + " " + label1,
+                              "jmp " + label2);
    }
 
    public static Instruction jump(String label) {
