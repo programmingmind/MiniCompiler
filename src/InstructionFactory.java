@@ -60,6 +60,8 @@ public class InstructionFactory {
       return new Instruction("",
                               new int[] {},
                               null,
+                              "pushl %ebp",
+                              "movl %esp, %ebp",
                               "subq $" + funcs.get(name).getStackSize() + ", %rsp");
    }
 
@@ -204,7 +206,7 @@ public class InstructionFactory {
       return new Instruction("loadai r" + reg + ", " + imm + ", r" + result,
                               new int[] {reg},
                               result,
-                              "NOT SUPPORTED YET");
+                              "movl " + imm + "(%r" + reg + "), %r" + result);
    }
 
    public static Instruction loadGlobal(String var, int result) {
@@ -253,7 +255,7 @@ public class InstructionFactory {
       return new Instruction("storeai r" + reg + ", r" + result + ", " + imm,
                               new int[] {reg},
                               result,
-                              "NOT SUPPORTED YET");
+                              "movl %r" + reg + ", " + imm + "(%r" + result + ")");
    }
 
    public static Instruction storeGlobal(int reg, String var) {
@@ -296,6 +298,7 @@ public class InstructionFactory {
                               new int[] {},
                               null,
                               "addq $" + funcs.get(currentFunction).getStackSize() + ", %rsp",
+                              "leave",
                               "ret");
    }
 
