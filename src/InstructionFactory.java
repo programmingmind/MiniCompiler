@@ -350,7 +350,6 @@ public class InstructionFactory {
                               new int[] {},
                               reg,
                               "movl $" + num + ", %edi",
-                              "extern malloc",
                               "call malloc",
                               "mov %rax, %r" + reg);
    }
@@ -360,7 +359,6 @@ public class InstructionFactory {
                               new int[] {reg},
                               null,
                               "mov %r" + reg + ", %edi",
-                              "extern free",
                               "call free");
    }
 
