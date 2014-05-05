@@ -349,7 +349,7 @@ public class InstructionFactory {
       return new Instruction("new " + num + ", r" + reg,
                               new int[] {},
                               reg,
-                              "mov %edi, $" + num,
+                              "mov $" + num + ", %edi",
                               "extern malloc",
                               "call malloc",
                               "mov %rax, %r" + reg);
