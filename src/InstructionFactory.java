@@ -87,7 +87,7 @@ public class InstructionFactory {
                               new int[] {},
                               null,
                               "pushl %ebp",
-                              "movl %esp, %ebp",
+                              "movq %esp, %ebp",
                               "subq $" + funcs.get(name).getStackSize() + ", %rsp");
    }
 
@@ -226,14 +226,14 @@ public class InstructionFactory {
       return new Instruction("loadi " + immediate + ", r" + result,
                               new int[] {},
                               result,
-                              "movl $" + immediate + ", %r" + result);
+                              "movq $" + immediate + ", %r" + result);
    }
 
    public static Instruction loadai(int reg, int imm, int result) {
       return new Instruction("loadai r" + reg + ", " + imm + ", r" + result,
                               new int[] {reg},
                               result,
-                              "movl " + imm + "(%r" + reg + "), %r" + result);
+                              "movq " + imm + "(%r" + reg + "), %r" + result);
    }
 
    public static Instruction loadGlobal(String var, int result) {
@@ -248,7 +248,7 @@ public class InstructionFactory {
          return new Instruction("loadinargument " + var + ", " + num + ", r" + reg,
                                  new int[] {},
                                  reg,
-                                 "movl %" + paramRegs[num] + ", %r" + reg);
+                                 "movq %" + paramRegs[num] + ", %r" + reg);
       } else {
          return new Instruction("loadinargument " + var + ", " + num + ", r" + reg,
                                  new int[] {},
@@ -268,7 +268,7 @@ public class InstructionFactory {
       return new Instruction("computeformaladdress " + var + ", " + num + ", r" + reg,
                               new int[] {},
                               reg,
-                              "movl %rsp, %r" + reg,
+                              "movq %rsp, %r" + reg,
                               "addl $" + funcs.get(currentFunction).getOffset(var) + ", %r" + reg);
    }
 
@@ -290,7 +290,7 @@ public class InstructionFactory {
       return new Instruction("storeai r" + reg + ", r" + result + ", " + imm,
                               new int[] {reg},
                               result,
-                              "movl %r" + reg + ", " + imm + "(%r" + result + ")");
+                              "movq %r" + reg + ", " + imm + "(%r" + result + ")");
    }
 
    public static Instruction storeGlobal(int reg, String var) {
@@ -305,7 +305,7 @@ public class InstructionFactory {
          return new Instruction("storeinargument r" + reg + ", " + var + ", " + num,
                                  new int[] {reg},
                                  null,
-                                 "movl %r" + reg + ", %" + paramRegs[num]);
+                                 "movq %r" + reg + ", %" + paramRegs[num]);
       }
       else {
          return new Instruction("storeinargument r" + reg + ", " + var + ", " + num,
@@ -349,7 +349,7 @@ public class InstructionFactory {
       return new Instruction("new " + num + ", r" + reg,
                               new int[] {},
                               reg,
-                              "movl $" + num + ", %edi",
+                              "movq $" + num + ", %edi",
                               "call malloc",
                               "mov %rax, %r" + reg);
    }
@@ -366,8 +366,8 @@ public class InstructionFactory {
       return new Instruction("print r" + reg,
                               new int[] {reg},
                               null,
-                              "movl %r" + reg + ", %esi",
-                              "movl " + printName + ", %edi",
+                              "movq %r" + reg + ", %esi",
+                              "movq " + printName + ", %edi",
                               "movq $0, %rax",
                               "call printf");
    }
@@ -376,8 +376,8 @@ public class InstructionFactory {
       return new Instruction("println r" + reg,
                               new int[] {reg},
                               null,
-                              "movl %r" + reg + ", %esi",
-                              "movl " + printlnName + ", %edi",
+                              "movq %r" + reg + ", %esi",
+                              "movq " + printlnName + ", %edi",
                               "movq $0, %rax",
                               "call printf");
    }
@@ -388,8 +388,8 @@ public class InstructionFactory {
                               reg,
                               "movq %rsp, %r" + reg,
                               "subl $1, %rsp",
-                              "movl " + readName + ", %edi",
-                              "movl %r" + reg + ", %esi",
+                              "movq " + readName + ", %edi",
+                              "movq %r" + reg + ", %esi",
                               "movq $0, %rax",
                               "call scanf",
                               "mov (%r" + reg + "), %rax",
