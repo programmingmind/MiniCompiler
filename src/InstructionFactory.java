@@ -253,7 +253,8 @@ public class InstructionFactory {
       return new Instruction("computeformaladdress " + var + ", " + num + ", r" + reg,
                               new int[] {},
                               reg,
-                              "NOT SUPPORTED YET");
+                              "movl %rsp, %r" + reg,
+                              "addl $" + funcs.get(currentFunction).getOffset(var) + ", %r" + reg);
    }
 
    public static Instruction restoreFormal(String var, int num) {

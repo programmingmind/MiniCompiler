@@ -49,6 +49,10 @@ public class Function {
       return 8 * (vars.getParamNames().size() + vars.getLocals().size());
    }
 
+   public int getOffset(String var) {
+      return vars.getOffset(var);
+   }
+
    public Type getReturnType() {
       System.out.println("getting return type of " + name);
       return returnType;
