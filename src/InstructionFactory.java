@@ -13,6 +13,10 @@ public class InstructionFactory {
       funcs = functions;
    }
 
+   public static void setFunction(String name) {
+      currentFunction = name;
+   }
+
    private static int getCompNdx(int type, boolean reverse) {
       int ndx = 0;
       switch (type) {
@@ -53,7 +57,6 @@ public class InstructionFactory {
    }
 
    public static Instruction functionStart(String name) {
-      currentFunction = name;
       return new Instruction("",
                               new int[] {},
                               null,

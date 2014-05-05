@@ -196,6 +196,7 @@ function
          FUN id=ID parameters[vars] ^(RETTYPE rt=return_type) declarations[vars]
          {
             funcs.newFunction(func = new Function($id.text,rt.t,vars));
+            InstructionFactory.setFunction($id.text);
             stables.push(vars);
             returns.push(rt.t); 
             current.push(func.getEntry());
