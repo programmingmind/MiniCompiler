@@ -82,7 +82,7 @@ public class InstructionFactory {
       return new Instruction("",
                               new int[] {},
                               null,
-                              "pushl %ebp",
+                              "pushq %ebp",
                               "movq %esp, %ebp",
                               "subq $" + funcs.get(name).getStackSize() + ", %rsp");
    }
@@ -118,13 +118,13 @@ public class InstructionFactory {
             return new Instruction(iloc,
                                     new int[] {left, right},
                                     result,
-                                    asm + "l %r" + right + ", %r" + result);
+                                    asm + "q %r" + right + ", %r" + result);
          } else if (right == result) {
             if (type == TypeCheck.PLUS || type == TypeCheck.TIMES) {
                return new Instruction(iloc,
                                        new int[] {left, right},
                                        result,
-                                       asm + "l %r" + left + ", %r" + result);
+                                       asm + "q %r" + left + ", %r" + result);
             } else {
                return new Instruction(iloc,
                                        new int[] {left, right},
@@ -136,20 +136,20 @@ public class InstructionFactory {
                                     new int[] {left, right},
                                     result,
                                     "mov %r" + left + ", %r" + result,
-                                    asm + "l %r" + right + ", %r" + result);
+                                    asm + "q %r" + right + ", %r" + result);
          }
       } else {
          if (left == result) {
             return new Instruction(iloc,
                                     new int[] {left},
                                     result,
-                                    (type == TypeCheck.PLUS ? "addl" : "subl") + " $" + imm + ", %r" + result);
+                                    (type == TypeCheck.PLUS ? "addq" : "subq") + " $" + imm + ", %r" + result);
          } else {
             return new Instruction(iloc,
                                     new int[] {left},
                                     result,
                                     "mov %r" + left + ", %r" + result,
-                                    (type == TypeCheck.PLUS ? "addl" : "subl") + " $" + imm + ", %r" + result);
+                                    (type == TypeCheck.PLUS ? "addq" : "subq") + " $" + imm + ", %r" + result);
          }
       }
    }
@@ -265,7 +265,7 @@ public class InstructionFactory {
                               new int[] {},
                               reg,
                               "movq %rsp, %r" + reg,
-                              "addl $" + funcs.get(currentFunction).getOffset(var) + ", %r" + reg);
+                              "addq $" + funcs.get(currentFunction).getOffset(var) + ", %r" + reg);
    }
 
    public static Instruction restoreFormal(String var, int num) {
@@ -383,13 +383,13 @@ public class InstructionFactory {
                               new int[] {},
                               reg,
                               "movq %rsp, %r" + reg,
-                              "subl $1, %rsp",
+                              "subq $1, %rsp",
                               "movq " + readName + ", %edi",
                               "movq %r" + reg + ", %esi",
                               "movq $0, %rax",
                               "call scanf",
                               "mov (%r" + reg + "), %rax",
-                              "addl $1, %rsp",
+                              "addq $1, %rsp",
                               "mov %rax, %r" + reg);
    }
 
