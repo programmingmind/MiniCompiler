@@ -26,7 +26,6 @@ public class InstructionFactory {
       return "\t.section .rodata\n"
             +printName + "\n"
             +"\t.string \"%ld\"\n"
-            +"\t.text\n"
             +printlnName + "\n"
             +"\t.string \"%ld\\n\"\n"
             +"\t.text\n";
