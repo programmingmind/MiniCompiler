@@ -35,11 +35,8 @@ public class InstructionFactory {
    public static String globalHeader(SymbolTable globals) {
       StringWriter sw = new StringWriter();
       List<String> globalNames = globals.getLocals();
-      if (globalNames.size() > 0) {
-         sw.append("declare\n");
-         for (String name : globalNames)
-            sw.append("\t.comm glob_" + name + ", 8, 8\n");
-      }
+      for (String name : globalNames)
+         sw.append("\t.comm glob_" + name + ", 8, 8\n");
       return sw.toString();
    }
 
