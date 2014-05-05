@@ -30,9 +30,12 @@ options
    private Stack<Block> next;
    private Stack<Block> current;
 
-   private File file = null;
-   private FileWriter fw = null;
-   private BufferedWriter bw = null;
+   private File ilocFile = null;
+   private File asmFile = null;
+   private FileWriter ilocFW = null;
+   private FileWriter asmFW = null;
+   private BufferedWriter ilocBW = null;
+   private BufferedWriter asmBW = null;
 }
 
 error0 [String text]
@@ -62,31 +65,47 @@ program [boolean outputIloc, String fileName]
       stables.push(stable);
       returns.push(Type.voidType());
 
-      if (outputIloc) {
-         String name = fileName.contains(".") ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
-         name = name.contains("/") ? name.substring(name.lastIndexOf("/") + 1) : name;
-         System.out.println("saving to iloc/" + name + ".il");
-         file = new File("iloc/" + name + ".il");
-         try {
-            if (!file.exists())
-               file.createNewFile();
+      InstructionFactory.setFunctions(funcs);
+
+      String name = fileName.contains(".") ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
+      name = name.contains("/") ? name.substring(name.lastIndexOf("/") + 1) : name;
+
+      System.out.println("saving to asm/" + name + ".s");
+      asmFile = new File("asm/" + name + ".s");
+      try {
+         if (!asmFile.exists())
+            asmFile.createNewFile();
+ 
+         asmFW = new FileWriter(asmFile.getAbsoluteFile());
+         asmBW = new BufferedWriter(asmFW);
+
+         if (outputIloc) {
+            System.out.println("saving to iloc/" + name + ".il");
+            ilocFile = new File("iloc/" + name + ".il");
+            
+            if (!ilocFile.exists())
+               ilocFile.createNewFile();
     
-            fw = new FileWriter(file.getAbsoluteFile());
-            bw = new BufferedWriter(fw);
-         } catch (IOException ioe) {
-            ioe.printStackTrace();
+            ilocFW = new FileWriter(ilocFile.getAbsoluteFile());
+            ilocBW = new BufferedWriter(ilocFW);
          }
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
       }
    }
    : ^(PROGRAM types[stable] declarations[stable] functions)
       {
-         if (outputIloc) {
-            try {
-               bw.close();
-               fw.close();
-            } catch (IOException ioe) {
-               ioe.printStackTrace();
+         try {
+            asmBW.close();
+            asmFW.close();
+
+            if (outputIloc) {
+               ilocBW.close();
+               asmFW.close();
             }
+
+         } catch (IOException ioe) {
+            ioe.printStackTrace();
          }
       }
    ;
@@ -195,14 +214,17 @@ function
          returns.pop();
          current.peek().addNext(func.getExit());
 
-         if (bw != null) {
-            func.saveDot();
+         String[] code = func.getCode();
+         try {
+            asmBW.write(code[1] + "\n");
 
-            try {
-               bw.write(func + "\n");
-            } catch (IOException ioe) {
-              ioe.printStackTrace();
+            if (ilocBW != null) {
+               func.saveDot();
+
+               ilocBW.write(code[0] + "\n");
             }
+         } catch (IOException ioe) {
+            ioe.printStackTrace();
          }
       }
    ;
@@ -546,9 +568,11 @@ expression returns [Type t = null, Integer reg = null, Integer imm = null]
             }
          } else if (a.imm == null && b.imm == null) {
             $reg = func.getNextRegister();
+            int tmp = func.getNextRegister();
             current.peek().addInstruction(InstructionFactory.loadi(0, $reg));
+            current.peek().addInstruction(InstructionFactory.loadi(1, tmp));
             current.peek().addInstruction(InstructionFactory.comp(a.reg, b.reg));
-            current.peek().addInstruction(InstructionFactory.ccmove(op.getType(), false, 1, $reg));
+            current.peek().addInstruction(InstructionFactory.ccmove(op.getType(), false, tmp, $reg));
          } else {
             int tmpReg, tmpImm;
             boolean reverse;
@@ -562,9 +586,11 @@ expression returns [Type t = null, Integer reg = null, Integer imm = null]
                reverse = false;
             }
             $reg = func.getNextRegister();
+            int tmp = func.getNextRegister();
             current.peek().addInstruction(InstructionFactory.loadi(0, $reg));
+            current.peek().addInstruction(InstructionFactory.loadi(1, tmp));
             current.peek().addInstruction(InstructionFactory.compi(tmpReg, tmpImm));
-            current.peek().addInstruction(InstructionFactory.ccmove(op.getType(), reverse, 1, $reg));
+            current.peek().addInstruction(InstructionFactory.ccmove(op.getType(), reverse, tmp, $reg));
          }
       }
    | ^(EQ a=expression b=expression)
@@ -577,9 +603,11 @@ expression returns [Type t = null, Integer reg = null, Integer imm = null]
             $imm = a.imm.equals(b.imm) ? 1 : 0;
          } else if (a.imm == null && b.imm == null) {
             $reg = func.getNextRegister();
+            int tmp = func.getNextRegister();
             current.peek().addInstruction(InstructionFactory.loadi(0, $reg));
+            current.peek().addInstruction(InstructionFactory.loadi(1, tmp));
             current.peek().addInstruction(InstructionFactory.comp(a.reg, b.reg));
-            current.peek().addInstruction(InstructionFactory.ccmove(EQ, false, 1, $reg));
+            current.peek().addInstruction(InstructionFactory.ccmove(EQ, false, tmp, $reg));
          } else {
             int tmpReg, tmpImm;
             if (a.imm != null) {
@@ -590,9 +618,11 @@ expression returns [Type t = null, Integer reg = null, Integer imm = null]
                tmpImm = b.imm;
             }
             $reg = func.getNextRegister();
+            int tmp = func.getNextRegister();
             current.peek().addInstruction(InstructionFactory.loadi(0, $reg));
+            current.peek().addInstruction(InstructionFactory.loadi(1, tmp));
             current.peek().addInstruction(InstructionFactory.compi(tmpReg, tmpImm));
-            current.peek().addInstruction(InstructionFactory.ccmove(EQ, false, 1, $reg));
+            current.peek().addInstruction(InstructionFactory.ccmove(EQ, false, tmp, $reg));
          }
       }
    | l=lvalue { $t=l.t; $reg=l.reg; }

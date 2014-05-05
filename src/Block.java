@@ -59,14 +59,19 @@ public class Block {
       instructions.add(inst);
    }
 
-   public String toString() {
-      StringWriter sw = new StringWriter();
+   public String[] getCode() {
+      StringWriter iloc = new StringWriter();
+      StringWriter asm = new StringWriter();
 
-      sw.append(label + ":\n");
-      for (Instruction instruction : instructions)
-         sw.append("\t" + instruction + "\n");
+      iloc.append(label + ":\n");
+      asm.append(label + ":\n");
+      for (Instruction instruction : instructions) {
+         iloc.append("\t" + instruction.toIloc() + "\n");
+         for (String s : instruction.toAssembly())
+            asm.append("\t" + s + "\n");
+      }
 
-      return sw.toString();
+      return new String[] {iloc.toString(), asm.toString()};
    }
 
    public List<Block> getLinks() {

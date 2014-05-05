@@ -45,6 +45,10 @@ public class Function {
       return exit;
    }
 
+   public int getStackSize() {
+      return 8 * (vars.getParamNames().size() + vars.getLocals().size());
+   }
+
    public Type getReturnType() {
       System.out.println("getting return type of " + name);
       return returnType;
@@ -116,10 +120,15 @@ public class Function {
       }
    }
 
-   public String toString() {
-      StringWriter sw = new StringWriter();
+   public String[] getCode() {
+      StringWriter iloc = new StringWriter();
+      StringWriter asm = new StringWriter();
       Stack<Block> toVisit = new Stack<Block>();
       HashSet<Block> visited = new HashSet<Block>();
+      String[] code;
+
+      for (String s : InstructionFactory.functionStart(name).toAssembly())
+         asm.append("\t" + s + "\n");
 
       toVisit.push(entry);
       while (! toVisit.empty()) {
@@ -138,15 +147,20 @@ public class Function {
                      keep[keep.length - len--] = toVisit.pop();
                }
                toVisit.push(b);
-               for (Block k : keep)  toVisit.push(k);
+               for (Block k : keep)
+                  toVisit.push(k);
             }
          }
 
-         sw.append(tmp.toString());
+         code = tmp.getCode();
+         iloc.append(code[0]);
+         asm.append(code[1]);
       }
-      sw.append(exit.toString());
+      code = exit.getCode();
+      iloc.append(code[0]);
+      asm.append(code[1]);
 
-      return sw.toString();
+      return new String[] {iloc.toString(), asm.toString()};
    }
 
    public void cleanBlocks() {
