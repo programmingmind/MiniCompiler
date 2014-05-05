@@ -95,7 +95,15 @@ program [boolean outputIloc, String fileName]
          ioe.printStackTrace();
       }
    }
-   : ^(PROGRAM types[stable] declarations[stable] functions)
+   : ^(PROGRAM types[stable] declarations[stable]
+         {
+            try {
+               asmBW.write(InstructionFactory.globalHeader(stable));
+            } catch (IOException ioe) {
+               ioe.printStackTrace();
+            }
+         }
+         functions)
       {
          try {
             asmBW.close();

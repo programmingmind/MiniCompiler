@@ -1,3 +1,7 @@
+import java.io.StringWriter;
+
+import java.util.List;
+
 public class InstructionFactory {
    private static final String[] ops = {"eq", "ge", "gt", "le", "lt", "ne"};
    private static final String[] asmOps = {"e", "ge", "g", "le", "l", "ne"};
@@ -26,6 +30,17 @@ public class InstructionFactory {
             +printlnName + "\n"
             +"\t.string \"%ld\\n\"\n"
             +"\t.text\n";
+   }
+
+   public static String globalHeader(SymbolTable globals) {
+      StringWriter sw = new StringWriter();
+      List<String> globalNames = globals.getLocals();
+      if (globalNames.size() > 0) {
+         sw.append("declare\n");
+         for (String name : globalNames)
+            sw.append("\t.comm glob_" + name + ", 8, 8\n");
+      }
+      return sw.toString();
    }
 
    private static int getCompNdx(int type, boolean reverse) {
@@ -225,7 +240,7 @@ public class InstructionFactory {
       return new Instruction("loadglobal " + var + ", r" + result,
                               new int[] {},
                               result,
-                              "NOT SUPPORTED YET");
+                              "movq glob_" + var + "(%rip), %r" + result);
    }
 
    public static Instruction loadArg(String var, int num, int reg) {
@@ -268,7 +283,7 @@ public class InstructionFactory {
       return new Instruction("computeglobaladdress " + var + ", r" + result,
                               new int[] {},
                               result,
-                              "NOT SUPPORTED YET");
+                              "movq $glob_" + var + ", %r" + result);
    }
 
    public static Instruction storeai(int reg, int result, int imm) {
@@ -282,7 +297,7 @@ public class InstructionFactory {
       return new Instruction("storeglobal r" + reg + ", " + var,
                               new int[] {reg},
                               null,
-                              "NOT SUPPORTED YET");
+                              "movq %r" + reg + ", glob_" + var + "(%rip)");
    }
 
    public static Instruction storeInArg(int reg, String var, int num) {
@@ -355,6 +370,7 @@ public class InstructionFactory {
                               null,
                               "movl %r" + reg + ", %esi",
                               "movl " + printName + ", %edi",
+                              "movq $0, %rax",
                               "call printf");
    }
 
@@ -364,6 +380,7 @@ public class InstructionFactory {
                               null,
                               "movl %r" + reg + ", %esi",
                               "movl " + printlnName + ", %edi",
+                              "movq $0, %rax",
                               "call printf");
    }
 
@@ -372,6 +389,7 @@ public class InstructionFactory {
                               new int[] {},
                               reg,
                               "movl " + readName + ", %esi",
+                              "movq $0, %rax",
                               "call scanf",
                               "mov %rax, %r" + reg);
    }
