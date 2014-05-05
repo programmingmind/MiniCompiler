@@ -2,9 +2,9 @@ public class InstructionFactory {
    private static final String[] ops = {"eq", "ge", "gt", "le", "lt", "ne"};
    private static final String[] asmOps = {"e", "ge", "g", "le", "l", "ne"};
 
-   public static final String printName = ".LLC0";
-   public static final String printlnName = ".LLC1";
-   public static final String readName = ".LLC0";
+   private static final String printName = ".LLC0";
+   private static final String printlnName = ".LLC1";
+   private static final String readName = ".LLC0";
 
    private static Functions funcs;
    private static String currentFunction;
@@ -15,6 +15,16 @@ public class InstructionFactory {
 
    public static void setFunction(String name) {
       currentFunction = name;
+   }
+
+   public static String getProgramHeader() {
+      return "\t.section .rodata\n"
+            +printName + "\n"
+            +"\t.string \"%ld\"\n"
+            +"\t.text\n"
+            +printlnName + "\n"
+            +"\t.string \"%ld\\n\"\n"
+            +"\t.text\n";
    }
 
    private static int getCompNdx(int type, boolean reverse) {

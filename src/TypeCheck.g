@@ -79,6 +79,8 @@ program [boolean outputIloc, String fileName]
          asmFW = new FileWriter(asmFile.getAbsoluteFile());
          asmBW = new BufferedWriter(asmFW);
 
+         asmBW.write(InstructionFactory.getProgramHeader());
+
          if (outputIloc) {
             System.out.println("saving to iloc/" + name + ".il");
             ilocFile = new File("iloc/" + name + ".il");
