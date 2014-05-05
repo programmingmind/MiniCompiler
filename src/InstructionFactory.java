@@ -388,9 +388,14 @@ public class InstructionFactory {
       return new Instruction("read r" + reg,
                               new int[] {},
                               reg,
-                              "movl " + readName + ", %esi",
+                              "movq %rsp, %r" + reg,
+                              "subl $1, %rsp",
+                              "movl " + readName + ", %edi",
+                              "movl %r" + reg + ", %esi",
                               "movq $0, %rax",
                               "call scanf",
+                              "mov (%r" + reg + "), %rax",
+                              "addl $1, %rsp",
                               "mov %rax, %r" + reg);
    }
 
