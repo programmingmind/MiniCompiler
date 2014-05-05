@@ -1,6 +1,7 @@
 public class InstructionFactory {
    private static final String[] ops = {"eq", "ge", "gt", "le", "lt", "ne"};
    private static final String[] asmOps = {"e", "ge", "g", "le", "l", "ne"};
+   private static final String[] paramRegs = {"edi", "esi", "edx", "ecx", "r8d", "r9d"};
 
    private static final String printName = ".LLC0";
    private static final String printlnName = ".LLC1";
@@ -228,10 +229,17 @@ public class InstructionFactory {
    }
 
    public static Instruction loadArg(String var, int num, int reg) {
-      return new Instruction("loadinargument " + var + ", " + num + ", r" + reg,
-                              new int[] {},
-                              reg,
-                              "NOT SUPPORTED YET");
+      if (num < paramRegs.length) {
+         return new Instruction("loadinargument " + var + ", " + num + ", r" + reg,
+                                 new int[] {},
+                                 reg,
+                                 "movl %" + paramRegs[num] + ", %r" + reg);
+      } else {
+         return new Instruction("loadinargument " + var + ", " + num + ", r" + reg,
+                                 new int[] {},
+                                 reg,
+                                 "NOT SUPPORTED YET");
+      }
    }
 
    public static Instruction loadRet(int reg) {
@@ -277,10 +285,18 @@ public class InstructionFactory {
    }
 
    public static Instruction storeInArg(int reg, String var, int num) {
-      return new Instruction("storeinargument r" + reg + ", " + var + ", " + num,
-                              new int[] {reg},
-                              null,
-                              "NOT SUPPORTED YET");
+      if (num < paramRegs.length) {
+         return new Instruction("storeinargument r" + reg + ", " + var + ", " + num,
+                                 new int[] {reg},
+                                 null,
+                                 "movl %r" + reg + ", %" + paramRegs[num]);
+      }
+      else {
+         return new Instruction("storeinargument r" + reg + ", " + var + ", " + num,
+                                 new int[] {reg},
+                                 null,
+                                 "NOT SUPPORTED YET");
+      }
    }
 
    public static Instruction storeOutArg(int reg, int num) {
