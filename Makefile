@@ -24,3 +24,4 @@ clean:
 	rm -f gen/*
 	rm -f dot/*.dot
 	rm -f iloc/*.il
+	rm -f asm/*.s
