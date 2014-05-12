@@ -583,13 +583,12 @@ public class InstructionFactory {
                               reg) {
          public String[] toAssembly() {
             return new String[] {
-               "movq %rsp, %r" + target.getASM(),
                "leaq 8(%rsp), %r" + target.getASM(),
                "movq $" + InstructionFactory.readName + ", %rdi",
                "movq %r" + target.getASM() + ", %rsi",
                "movq $0, %rax",
                "call scanf",
-               "mov (%r" + target.getASM() + "), %r" + target.getASM()
+               "mov 8(%rsp), %r" + target.getASM()
             };
          }
       };
