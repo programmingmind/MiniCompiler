@@ -334,6 +334,10 @@ public class InstructionFactory {
    }
 
    public static Instruction ret() {
+      return jump(funcs.get(currentFunction).getExit().getLabel());
+   }
+
+   public static Instruction realRet() {
       return new Instruction("ret",
                               new int[] {},
                               null,

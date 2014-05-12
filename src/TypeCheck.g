@@ -218,8 +218,7 @@ function
          if (sl.t == null && !returns.peek().equals(Type.voidType()))
             error0($id.text + " missing return value");
 
-         if (sl.t == null)
-            func.getExit().addInstruction(InstructionFactory.ret());
+         func.getExit().addInstruction(InstructionFactory.realRet());
 
          stables.pop();
          returns.pop();
