@@ -5,7 +5,7 @@ import java.util.List;
 public class InstructionFactory {
    private static final String[] ops = {"eq", "ge", "gt", "le", "lt", "ne"};
    private static final String[] asmOps = {"e", "ge", "g", "le", "l", "ne"};
-   private static final String[] paramRegs = {"rdi", "rsi", "rdx", "rcx", "r8d", "r9d"};
+   private static final String[] paramRegs = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 
    private static final String printName = ".LC0";
    private static final String printlnName = ".LC1";
