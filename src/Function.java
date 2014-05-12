@@ -46,7 +46,8 @@ public class Function {
    }
 
    public int getStackSize() {
-      return 8 * (vars.getParamNames().size() + vars.getLocals().size());
+      // make room for all possible variables, and 1 extra spot for scanf
+      return 8 * (vars.getParamNames().size() + vars.getLocals().size() + 1);
    }
 
    public int getOffset(String var) {

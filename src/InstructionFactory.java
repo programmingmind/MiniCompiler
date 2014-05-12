@@ -383,14 +383,12 @@ public class InstructionFactory {
                               new int[] {},
                               reg,
                               "movq %rsp, %r" + reg,
-                              "subq $1, %rsp",
+                              "addq $8, %r" + reg,
                               "movq " + readName + ", %edi",
                               "movq %r" + reg + ", %esi",
                               "movq $0, %rax",
                               "call scanf",
-                              "mov (%r" + reg + "), %rax",
-                              "addq $1, %rsp",
-                              "mov %rax, %r" + reg);
+                              "mov (%r" + reg + "), %r" + reg);
    }
 
    public static Instruction mov(int r1, int r2) {
