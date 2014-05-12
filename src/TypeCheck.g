@@ -283,7 +283,9 @@ statement returns [Type t = null]
          if (! a.t.equals(l.t))
             error($ASSIGN.line, "assignments need the same types (" + l.t + " vs " + a.t + ")");
  
-         current.peek().removeUnnecessaryLVal();
+         if (l.wasStruct)
+            current.peek().removeUnnecessaryLVal();
+         
          Register reg = store_reg(l).reg;
          if (a.imm != null) {
             current.peek().addInstruction(InstructionFactory.loadi(a.imm, reg));
@@ -674,7 +676,7 @@ expression returns [Type t = null, Register reg = null, Integer imm = null]
    | f=factor { $t=f.t; $reg=f.reg; $imm=f.imm; }
    ;
 
-lvalue returns [Type t = null, Register reg = null, String name = null, boolean global = false, dot_load_return dl = null]
+lvalue returns [Type t = null, Register reg = null, String name = null, boolean global = false, dot_load_return dl = null, boolean wasStruct = false]
    : ^(DOT d=dot_load id=ID)
       {
          if (! d.t.isStruct())
@@ -686,6 +688,7 @@ lvalue returns [Type t = null, Register reg = null, String name = null, boolean 
          current.peek().addInstruction(InstructionFactory.loadai(d.reg, structTable.getOffset($id.text), $reg = func.getNextRegister()));
          $dl = d;
          $name = $id.text;
+         $wasStruct = true;
       }
    | id=ID
       {

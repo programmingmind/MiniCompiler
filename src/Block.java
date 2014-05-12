@@ -68,7 +68,7 @@ public class Block {
 
       Instruction tmp = instructions.remove(instructions.size() - 1);
       if (! tmp.toIloc().startsWith("loadai")) {
-         System.err.println("WARNING: last instruction was neccessary l-value related instruction");
+         System.err.println("WARNING: last instruction (" + tmp.toIloc() + ") was neccessary l-value related instruction");
          instructions.add(tmp);
       }
    }
