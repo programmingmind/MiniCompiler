@@ -1,25 +1,17 @@
-public class Instruction {
+public abstract class Instruction {
    private String text;
-   private String[] asm;
-   private int[] sources;
-   private Integer target;
+   protected Register[] sources;
+   protected Register target;
 
-   public Instruction(String text, int[] sources, Integer target, String... asm) {
+   public Instruction(String text, Register[] sources, Register target) {
       this.text = text;
-      this.asm = asm;
       this.sources = sources;
       this.target = target;
-   }
-
-   public Instruction(String text, int[] sources, Integer target, String asm) {
-      this(text, sources, target, new String[] {asm});
    }
 
    public String toIloc() {
       return text;
    }
 
-   public String[] toAssembly() {
-      return asm;
-   }
+   public abstract String[] toAssembly();
 }

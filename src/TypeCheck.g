@@ -49,7 +49,11 @@ error [int line, String text]
 verify [boolean outputIloc, String fileName]
    : program [outputIloc, fileName]
       {
-         System.out.println("Type checking passed and iloc instructions generated");
+         System.out.print("Type checking passed");
+         if (outputIloc)
+            System.out.print(", iloc generated,");
+         System.out.println(" and assembly instructions generated");
+
          if (!funcs.isDefined("main"))
             System.err.println("WARNING: missing main()");
       }
@@ -224,6 +228,8 @@ function
          returns.pop();
          current.peek().addNext(func.getExit());
 
+         func.allocateRegisters();
+
          String[] code = func.getCode();
          try {
             asmBW.write(code[1] + "\n");
@@ -248,11 +254,11 @@ return_type returns [Type t = null]
    | { System.out.println("void return"); $t = Type.voidType(); }
    ;
 
-store_reg [lvalue_return l] returns [int reg]
+store_reg [lvalue_return l] returns [Register reg]
    : {$reg = (l.global || l.dl != null) ? func.getNextRegister() : l.reg;}
    ;
 
-store_val [int reg, lvalue_return l]
+store_val [Register reg, lvalue_return l]
    : {if (l.global) {
          current.peek().addInstruction(InstructionFactory.storeGlobal(reg, l.name));
       } else if (l.dl != null) {
@@ -278,7 +284,7 @@ statement returns [Type t = null]
             error($ASSIGN.line, "assignments need the same types (" + l.t + " vs " + a.t + ")");
  
          current.peek().removeUnnecessaryLVal();
-         int reg = store_reg(l).reg;
+         Register reg = store_reg(l).reg;
          if (a.imm != null) {
             current.peek().addInstruction(InstructionFactory.loadi(a.imm, reg));
          } else {
@@ -307,7 +313,7 @@ statement returns [Type t = null]
          if (! l.t.isInt())
             error0("can only read in ints");
 
-         int reg = store_reg(l).reg;
+         Register reg = store_reg(l).reg;
          current.peek().addInstruction(InstructionFactory.read(reg));
          store_val(reg, l);
       }
@@ -468,14 +474,15 @@ invocation returns [Type t = null]
       }
    ;
 
-expression returns [Type t = null, Integer reg = null, Integer imm = null]
+expression returns [Type t = null, Register reg = null, Integer imm = null]
    : ^(op=(PLUS | TIMES | DIVIDE) a=expression b=expression)
       {
          if (! (a.t.isInt() && b.t.isInt()))
             error0("not an int");
          $t=Type.intType();
 
-         Integer tmpi = null, lReg = null, rReg = null;
+         Integer tmpi = null;
+         Register lReg = null, rReg = null;
 
          if (a.imm != null && b.imm != null) {
             switch (op.getType()) {
@@ -521,7 +528,7 @@ expression returns [Type t = null, Integer reg = null, Integer imm = null]
             if (a.imm != null)
                $imm = -a.imm;
             else {
-               int tmp = func.getNextRegister();
+               Register tmp = func.getNextRegister();
                current.peek().addInstruction(InstructionFactory.loadi(0, tmp));
                current.peek().addInstruction(InstructionFactory.arithmetic(MINUS, null, tmp, a.reg, $reg = func.getNextRegister()));
             }
@@ -544,8 +551,8 @@ expression returns [Type t = null, Integer reg = null, Integer imm = null]
          if (a.imm != null && b.imm != null) {
             $imm = op.getType() == AND ? (a.imm & b.imm) : (a.imm | b.imm);
          } else {
-            Integer lReg = a.reg;
-            Integer rReg = b.reg;
+            Register lReg = a.reg;
+            Register rReg = b.reg;
             if (a.imm != null)
                current.peek().addInstruction(InstructionFactory.loadi(a.imm, lReg = func.getNextRegister()));
             if (b.imm != null)
@@ -579,13 +586,14 @@ expression returns [Type t = null, Integer reg = null, Integer imm = null]
             }
          } else if (a.imm == null && b.imm == null) {
             $reg = func.getNextRegister();
-            int tmp = func.getNextRegister();
+            Register tmp = func.getNextRegister();
             current.peek().addInstruction(InstructionFactory.loadi(0, $reg));
             current.peek().addInstruction(InstructionFactory.loadi(1, tmp));
             current.peek().addInstruction(InstructionFactory.comp(a.reg, b.reg));
             current.peek().addInstruction(InstructionFactory.ccmove(op.getType(), false, tmp, $reg));
          } else {
-            int tmpReg, tmpImm;
+            Register tmpReg;
+            Integer tmpImm;
             boolean reverse;
             if (a.imm != null) {
                tmpReg = b.reg;
@@ -597,7 +605,7 @@ expression returns [Type t = null, Integer reg = null, Integer imm = null]
                reverse = false;
             }
             $reg = func.getNextRegister();
-            int tmp = func.getNextRegister();
+            Register tmp = func.getNextRegister();
             current.peek().addInstruction(InstructionFactory.loadi(0, $reg));
             current.peek().addInstruction(InstructionFactory.loadi(1, tmp));
             current.peek().addInstruction(InstructionFactory.compi(tmpReg, tmpImm));
@@ -614,13 +622,14 @@ expression returns [Type t = null, Integer reg = null, Integer imm = null]
             $imm = a.imm.equals(b.imm) ? 1 : 0;
          } else if (a.imm == null && b.imm == null) {
             $reg = func.getNextRegister();
-            int tmp = func.getNextRegister();
+            Register tmp = func.getNextRegister();
             current.peek().addInstruction(InstructionFactory.loadi(0, $reg));
             current.peek().addInstruction(InstructionFactory.loadi(1, tmp));
             current.peek().addInstruction(InstructionFactory.comp(a.reg, b.reg));
             current.peek().addInstruction(InstructionFactory.ccmove(EQ, false, tmp, $reg));
          } else {
-            int tmpReg, tmpImm;
+            Register tmpReg;
+            Integer tmpImm;
             if (a.imm != null) {
                tmpReg = b.reg;
                tmpImm = a.imm;
@@ -629,7 +638,7 @@ expression returns [Type t = null, Integer reg = null, Integer imm = null]
                tmpImm = b.imm;
             }
             $reg = func.getNextRegister();
-            int tmp = func.getNextRegister();
+            Register tmp = func.getNextRegister();
             current.peek().addInstruction(InstructionFactory.loadi(0, $reg));
             current.peek().addInstruction(InstructionFactory.loadi(1, tmp));
             current.peek().addInstruction(InstructionFactory.compi(tmpReg, tmpImm));
@@ -646,7 +655,7 @@ expression returns [Type t = null, Integer reg = null, Integer imm = null]
          if (a.imm != null)
             $imm = -a.imm;
          else {
-            int tmp = func.getNextRegister();
+            Register tmp = func.getNextRegister();
             current.peek().addInstruction(InstructionFactory.loadi(0, tmp));
             current.peek().addInstruction(InstructionFactory.arithmetic(MINUS, null, tmp, a.reg, $reg = func.getNextRegister()));
          }
@@ -665,7 +674,7 @@ expression returns [Type t = null, Integer reg = null, Integer imm = null]
    | f=factor { $t=f.t; $reg=f.reg; $imm=f.imm; }
    ;
 
-lvalue returns [Type t = null, Integer reg = null, String name = null, boolean global = false, dot_load_return dl = null]
+lvalue returns [Type t = null, Register reg = null, String name = null, boolean global = false, dot_load_return dl = null]
    : ^(DOT d=dot_load id=ID)
       {
          if (! d.t.isStruct())
@@ -702,7 +711,7 @@ lvalue returns [Type t = null, Integer reg = null, String name = null, boolean g
       }
    ;
 
-dot_load returns [Type t = null, Integer reg = null]
+dot_load returns [Type t = null, Register reg = null]
    : ^(DOT d=dot_load id=ID)
       {
          if (! d.t.isStruct())
@@ -735,7 +744,7 @@ dot_load returns [Type t = null, Integer reg = null]
       }
    ;
 
-factor returns [Type t = null, Integer reg = null, Integer imm = null]
+factor returns [Type t = null, Register reg = null, Integer imm = null]
    : LPAREN! tmp=expression RPAREN! { $t = tmp.t; $reg = tmp.reg; $imm = tmp.imm; }
    | i=invocation
       {
@@ -758,11 +767,11 @@ factor returns [Type t = null, Integer reg = null, Integer imm = null]
       }
    ;
 
-arguments returns [ArrayList<Type> argTypes, ArrayList<Integer> registers]
+arguments returns [ArrayList<Type> argTypes, ArrayList<Register> registers]
    @init
    {
       $argTypes = new ArrayList<Type>();
-      $registers = new ArrayList<Integer>();
+      $registers = new ArrayList<Register>();
    }
    : ^(ARGS (t=expression
       {

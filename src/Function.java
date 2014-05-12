@@ -14,9 +14,11 @@ public class Function {
    private String name;
    private Type returnType;
    private SymbolTable vars;
-   private HashMap<String, Integer> registers;
+   private HashMap<String, Register> registers;
    private Block entry, exit;
+
    private int currentRegister;
+   private ArrayList<Register> usedRegs;
 
    public Function(String name, Type returnType, SymbolTable vars) {
       this.name = name;
@@ -27,7 +29,8 @@ public class Function {
       this.exit = new Block(name, "exit");
 
       currentRegister = 0;
-      registers = new HashMap<String, Integer>();
+      registers = new HashMap<String, Register>();
+      usedRegs = new ArrayList<Register>();
 
       for (String var : vars.getLocals())
          putVarRegister(var, getNextRegister());
@@ -77,20 +80,26 @@ public class Function {
       throw new RuntimeException("param " + name + " doesn't exist");
    }
 
-   public int getNextRegister() {
-      return currentRegister++;
+   public Register getNextRegister() {
+      Register reg = new Register(currentRegister++);
+      usedRegs.add(reg);
+      return reg;
    }
 
-   public int peekNextRegister() {
-      return currentRegister;
-   }
-
-   public Integer getVarRegister(String varName) {
+   public Register getVarRegister(String varName) {
       return registers.get(varName);
    }
 
-   public void putVarRegister(String varName, int reg) {
+   public void putVarRegister(String varName, Register reg) {
       registers.put(varName, reg);
+   }
+
+   public void allocateRegisters() {
+      if (usedRegs.size() > 8)
+         System.err.println("WARNING: Too many registers to allocate");
+
+      for (int i = 0; i < usedRegs.size(); i++)
+         usedRegs.get(i).setASM(8 + i);
    }
 
    public void saveDot() {
