@@ -364,7 +364,7 @@ public class InstructionFactory {
                               new int[] {reg},
                               null,
                               "movq %r" + reg + ", %rsi",
-                              "movq " + printName + ", %rdi",
+                              "movq $" + printName + ", %rdi",
                               "movq $0, %rax",
                               "call printf");
    }
@@ -374,7 +374,7 @@ public class InstructionFactory {
                               new int[] {reg},
                               null,
                               "movq %r" + reg + ", %rsi",
-                              "movq " + printlnName + ", %rdi",
+                              "movq $" + printlnName + ", %rdi",
                               "movq $0, %rax",
                               "call printf");
    }
@@ -385,7 +385,7 @@ public class InstructionFactory {
                               reg,
                               "movq %rsp, %r" + reg,
                               "leaq 8(%rsp), %r" + reg,
-                              "movq " + readName + ", %rdi",
+                              "movq $" + readName + ", %rdi",
                               "movq %r" + reg + ", %rsi",
                               "movq $0, %rax",
                               "call scanf",
