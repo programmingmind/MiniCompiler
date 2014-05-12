@@ -17,7 +17,7 @@ public class Block {
       this.label = func + "_" + which;
       if (func.equals("main") && which.equals("entry"))
          this.label = "main";
-      
+
       instructions = new ArrayList<Instruction>();
       predecessors = new ArrayList<Block>();
       successors = new ArrayList<Block>();
@@ -60,6 +60,17 @@ public class Block {
 
    public void addInstruction(Instruction inst) {
       instructions.add(inst);
+   }
+
+   public void removeUnnecessaryLVal() {
+      if (instructions.size() == 0)
+         return;
+
+      Instruction tmp = instructions.remove(instructions.size() - 1);
+      if (! tmp.toIloc().startsWith("loadai")) {
+         System.err.println("WARNING: last instruction was neccessary l-value related instruction");
+         instructions.add(tmp);
+      }
    }
 
    public String[] getCode() {

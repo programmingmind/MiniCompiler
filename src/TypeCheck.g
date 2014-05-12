@@ -278,6 +278,7 @@ statement returns [Type t = null]
          if (! a.t.equals(l.t))
             error($ASSIGN.line, "assignments need the same types (" + l.t + " vs " + a.t + ")");
  
+         current.peek().removeUnnecessaryLVal();
          int reg = store_reg(l).reg;
          if (a.imm != null) {
             current.peek().addInstruction(InstructionFactory.loadi(a.imm, reg));
