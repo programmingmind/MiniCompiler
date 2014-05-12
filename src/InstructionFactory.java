@@ -384,7 +384,7 @@ public class InstructionFactory {
                               new int[] {},
                               reg,
                               "movq %rsp, %r" + reg,
-                              "addq $8, %r" + reg,
+                              "leaq 8(%rsp), %r" + reg,
                               "movq " + readName + ", %rdi",
                               "movq %r" + reg + ", %rsi",
                               "movq $0, %rax",
