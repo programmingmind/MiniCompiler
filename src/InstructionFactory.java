@@ -346,7 +346,7 @@ public class InstructionFactory {
       return new Instruction("new " + num + ", r" + reg,
                               new int[] {},
                               reg,
-                              "movq $" + num + ", %edi",
+                              "movq $" + num + ", %rdi",
                               "call malloc",
                               "mov %rax, %r" + reg);
    }
@@ -355,7 +355,7 @@ public class InstructionFactory {
       return new Instruction("del r" + reg,
                               new int[] {reg},
                               null,
-                              "mov %r" + reg + ", %edi",
+                              "mov %r" + reg + ", %rdi",
                               "call free");
    }
 
@@ -363,8 +363,8 @@ public class InstructionFactory {
       return new Instruction("print r" + reg,
                               new int[] {reg},
                               null,
-                              "movq %r" + reg + ", %esi",
-                              "movq " + printName + ", %edi",
+                              "movq %r" + reg + ", %rsi",
+                              "movq " + printName + ", %rdi",
                               "movq $0, %rax",
                               "call printf");
    }
@@ -373,8 +373,8 @@ public class InstructionFactory {
       return new Instruction("println r" + reg,
                               new int[] {reg},
                               null,
-                              "movq %r" + reg + ", %esi",
-                              "movq " + printlnName + ", %edi",
+                              "movq %r" + reg + ", %rsi",
+                              "movq " + printlnName + ", %rdi",
                               "movq $0, %rax",
                               "call printf");
    }
@@ -385,8 +385,8 @@ public class InstructionFactory {
                               reg,
                               "movq %rsp, %r" + reg,
                               "addq $8, %r" + reg,
-                              "movq " + readName + ", %edi",
-                              "movq %r" + reg + ", %esi",
+                              "movq " + readName + ", %rdi",
+                              "movq %r" + reg + ", %rsi",
                               "movq $0, %rax",
                               "call scanf",
                               "mov (%r" + reg + "), %r" + reg);
