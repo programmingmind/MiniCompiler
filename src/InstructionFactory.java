@@ -5,11 +5,11 @@ import java.util.List;
 public class InstructionFactory {
    private static final String[] ops = {"eq", "ge", "gt", "le", "lt", "ne"};
    private static final String[] asmOps = {"e", "ge", "g", "le", "l", "ne"};
-   private static final String[] paramRegs = {"edi", "esi", "edx", "ecx", "r8d", "r9d"};
+   private static final String[] paramRegs = {"rdi", "rsi", "rdx", "rcx", "r8d", "r9d"};
 
-   private static final String printName = ".LLC0";
-   private static final String printlnName = ".LLC1";
-   private static final String readName = ".LLC0";
+   private static final String printName = ".LC0";
+   private static final String printlnName = ".LC1";
+   private static final String readName = ".LC0";
 
    private static Functions funcs;
    private static String currentFunction;
@@ -24,11 +24,12 @@ public class InstructionFactory {
 
    public static String getProgramHeader() {
       return "\t.section .rodata\n"
-            +printName + "\n"
+            +printName + ":\n"
             +"\t.string \"%ld\"\n"
-            +printlnName + "\n"
+            +printlnName + ":\n"
             +"\t.string \"%ld\\n\"\n"
-            +"\t.text\n";
+            +"\t.text\n"
+            +".globl main\n";
    }
 
    public static String globalHeader(SymbolTable globals) {
@@ -82,8 +83,8 @@ public class InstructionFactory {
       return new Instruction("",
                               new int[] {},
                               null,
-                              "pushq %ebp",
-                              "movq %esp, %ebp",
+                              "pushq %rbp",
+                              "movq %rsp, %rbp",
                               "subq $" + funcs.get(name).getStackSize() + ", %rsp");
    }
 

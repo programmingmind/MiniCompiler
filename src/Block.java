@@ -15,6 +15,9 @@ public class Block {
 
    private void init(String func, String which) {
       this.label = func + "_" + which;
+      if (func.equals("main") && which.equals("entry"))
+         this.label = "main";
+      
       instructions = new ArrayList<Instruction>();
       predecessors = new ArrayList<Block>();
       successors = new ArrayList<Block>();
