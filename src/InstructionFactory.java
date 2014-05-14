@@ -34,7 +34,8 @@ public class InstructionFactory {
             +printlnName + ":\n"
             +"\t.string \"%ld\\n\"\n"
             +"\t.text\n"
-            +".globl main\n";
+            +".globl main\n"
+            +"\t.type main, @function\n";
    }
 
    public static String globalHeader(SymbolTable globals) {
@@ -513,6 +514,7 @@ public class InstructionFactory {
 
    public static Instruction realRet() {
       final int stackSize = funcs.get(currentFunction).getStackSize();
+      final String funcName = currentFunction;
       return new Instruction("ret",
                               new Register[] {},
                               null) {
@@ -520,7 +522,8 @@ public class InstructionFactory {
             return new String[] {
                "addq $" + stackSize + ", %rsp",
                "leave",
-               "ret"
+               "ret",
+               ".size " + funcName + ", .-" + funcName
             };
          }
       };
