@@ -95,11 +95,14 @@ public class Function {
    }
 
    public void allocateRegisters() {
-      if (usedRegs.size() > 8)
-         System.err.println("WARNING: Too many registers to allocate");
-
-      for (int i = 0; i < usedRegs.size(); i++)
-         usedRegs.get(i).setASM(8 + i);
+      if (usedRegs.size() < InstructionFactory.registers.length) {
+         for (int i = 0; i < usedRegs.size(); i++)
+            usedRegs.get(i).setASM(InstructionFactory.registers[i]);
+      } else {
+         computeLiveRanges();
+         for (Block b : sortBlocks())
+            b.allocateRegisters();
+      }
    }
 
    public void saveDot() {
@@ -194,5 +197,19 @@ public class Function {
             }
          }
       }
+   }
+
+   private void computeLiveRanges() {
+      List<Block> blocks = sortBlocks();
+      boolean change = true;
+
+      while (change) {
+         change = false;
+         for (int i = blocks.size() - 1; i >= 0; i--)
+            change |= blocks.get(i).findPriorRegisters();
+      }
+
+      for (Block b : blocks)
+         b.computeLiveRanges();
    }
 }

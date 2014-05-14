@@ -1,8 +1,11 @@
 import java.io.StringWriter;
+
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class Block {
    private static HashMap<String, Integer> counts;
@@ -12,6 +15,9 @@ public class Block {
    private ArrayList<Block> predecessors;
    private ArrayList<Block> successors;
    private HashSet<Block> endBranchSuccessors;
+
+   private HashSet<Register> leaving;
+   private Set<Register> registers;
 
    private boolean hasLeft;
 
@@ -24,6 +30,8 @@ public class Block {
       predecessors = new ArrayList<Block>();
       successors = new ArrayList<Block>();
       endBranchSuccessors = new HashSet<Block>();
+
+      leaving = new HashSet<Register>();
 
       hasLeft = false;
    }
@@ -152,5 +160,68 @@ public class Block {
       }
 
       return change;
+   }
+
+   public boolean findPriorRegisters() {
+      HashSet<Register> setBefore = new HashSet<Register>();
+      HashSet<Register> targetsSet = new HashSet<Register>();
+
+      for (Instruction inst : instructions) {
+         for (Register src : inst.getSources())
+            if (! targetsSet.contains(src))
+               setBefore.add(src);
+         
+         Register target = inst.getTarget();
+         if (target != null)
+            targetsSet.add(target);
+      }
+
+      for (Register src : leaving)
+         if (! targetsSet.contains(src))
+            setBefore.add(src);
+
+      boolean change = false;
+      for (Block pre : predecessors)
+         change |= pre.leaving.addAll(setBefore);
+
+      return change;
+   }
+
+   public void computeLiveRanges() {
+      HashMap<Register, Integer> start = new HashMap<Register, Integer>();
+      HashMap<Register, Integer> end = new HashMap<Register, Integer>();
+
+      for (Block pre : predecessors) {
+         for (Register reg : pre.leaving) {
+            start.put(reg, -1);
+            end.put(reg, 0);
+         }
+      }
+
+      for (int i = 0; i < instructions.size(); i++) {
+         for (Register reg : instructions.get(i).getSources())
+            end.put(reg, i);
+
+         Register target = instructions.get(i).getTarget();
+         if (target != null) {
+            if (! start.containsKey(target))
+               start.put(target, i);
+            end.put(target, i);
+         }
+      }
+
+      for (Register reg : leaving)
+         end.put(reg, instructions.size());
+
+      registers = new HashSet<Register>(start.keySet());
+      registers.addAll(end.keySet());
+
+      for (Register register : registers)
+         register.setRange(this, start.get(register), end.get(register));
+   }
+
+   public void allocateRegisters() {
+      GraphColorer colorer = new GraphColorer(registers);
+      colorer.color();
    }
 }

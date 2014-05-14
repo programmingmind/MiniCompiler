@@ -1,13 +1,19 @@
+import java.util.HashMap;
+
 public class Register {
    private int iloc;
-   private Integer asm;
+   private String asm;
+
+   private HashMap<Block, int[]> range;
 
    public Register(int iloc) {
       this.iloc = iloc;
       this.asm = null;
+
+      range = new HashMap<Block, int[]>();
    }
 
-   public void setASM(int asm) {
+   public void setASM(String asm) {
       this.asm = asm;
    }
 
@@ -15,9 +21,30 @@ public class Register {
       return iloc;
    }
 
-   public int getASM() {
+   public boolean isASMSet() {
+      return asm != null;
+   }
+
+   public String getASM() {
       if (asm == null)
          throw new RuntimeException("assembly register not yet set");
       return asm;
+   }
+
+   public void setRange(Block b, int start, int end) {
+      range.put(b, new int[] {start, end});
+   }
+
+   public boolean overlaps(Register r) {
+      for (Block b : range.keySet()) {
+         int[] blockRange = range.get(b);
+         int[] otherRange = r.range.get(b);
+         if (otherRange != null) {
+            if ((blockRange[0] <= otherRange[0] && blockRange[1] >= otherRange[1]) ||
+                (otherRange[0] <= blockRange[0] && otherRange[1] >= blockRange[1]))
+               return true;
+         }
+      }
+      return false;
    }
 }

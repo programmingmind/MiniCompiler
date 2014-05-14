@@ -13,6 +13,14 @@ public abstract class Instruction {
       return text;
    }
 
+   public Register[] getSources() {
+      return sources;
+   }
+
+   public Register getTarget() {
+      return target;
+   }
+
    public boolean isJump() {
       return isJump(false);
    }
