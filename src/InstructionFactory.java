@@ -95,10 +95,10 @@ public class InstructionFactory {
             commands.add("pushq %rbp");
             commands.add("movq %rsp, %rbp");
             if (! name.equals("main")) {
-               commands.add("push %12");
-               commands.add("push %13");
-               commands.add("push %14");
-               commands.add("push %15");
+               commands.add("push %r12");
+               commands.add("push %r13");
+               commands.add("push %r14");
+               commands.add("push %r15");
             }
             commands.add("subq $" + stackSize + ", %rsp");
             return commands.toArray(new String[commands.size()]);
@@ -528,10 +528,10 @@ public class InstructionFactory {
             java.util.ArrayList<String> commands = new java.util.ArrayList<String>();
             commands.add("addq $" + stackSize + ", %rsp");
             if (! funcName.equals("main")) {
-               commands.add("pop %15");
-               commands.add("pop %14");
-               commands.add("pop %13");
-               commands.add("pop %12");
+               commands.add("pop %r15");
+               commands.add("pop %r14");
+               commands.add("pop %r13");
+               commands.add("pop %r12");
             }
             commands.add("leave");
             commands.add("ret");
