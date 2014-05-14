@@ -566,7 +566,8 @@ public class InstructionFactory {
                "movq $" + (newLine ? InstructionFactory.printlnName : InstructionFactory.printName) + ", %rdi",
                "movq $0, %rax",
                "push %r10",
-               "call printf"
+               "call printf",
+               "pop %r10"
             };
          }
       };
