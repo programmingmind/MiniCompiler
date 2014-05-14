@@ -85,17 +85,23 @@ public class InstructionFactory {
       return asmOps[getCompNdx(type, reverse)];
    }
 
-   public static Instruction functionStart(String name) {
+   public static Instruction functionStart(final String name) {
       final int stackSize = funcs.get(name).getStackSize();
       return new Instruction("",
                               new Register[] {},
                               null) {
          public String[] toAssembly() {
-            return new String[] {
-               "pushq %rbp",
-               "movq %rsp, %rbp",
-               "subq $" + stackSize + ", %rsp"
-            };
+            java.util.ArrayList<String> commands = new java.util.ArrayList<String>();
+            commands.add("pushq %rbp");
+            commands.add("movq %rsp, %rbp");
+            if (! name.equals("main")) {
+               commands.add("push %12");
+               commands.add("push %13");
+               commands.add("push %14");
+               commands.add("push %15");
+            }
+            commands.add("subq $" + stackSize + ", %rsp");
+            return commands.toArray(new String[commands.size()]);
          }
       };                       
    }
@@ -519,12 +525,18 @@ public class InstructionFactory {
                               new Register[] {},
                               null) {
          public String[] toAssembly() {
-            return new String[] {
-               "addq $" + stackSize + ", %rsp",
-               "leave",
-               "ret",
-               ".size " + funcName + ", .-" + funcName
-            };
+            java.util.ArrayList<String> commands = new java.util.ArrayList<String>();
+            commands.add("addq $" + stackSize + ", %rsp");
+            if (! funcName.equals("main")) {
+               commands.add("pop %15");
+               commands.add("pop %14");
+               commands.add("pop %13");
+               commands.add("pop %12");
+            }
+            commands.add("leave");
+            commands.add("ret");
+            commands.add(".size " + funcName + ", .-" + funcName);
+            return commands.toArray(new String[commands.size()]);
          }
       };
    }
