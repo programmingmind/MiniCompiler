@@ -556,34 +556,28 @@ public class InstructionFactory {
       };
    }
 
-   public static Instruction print(Register reg) {
-      return new Instruction("print r" + reg.getILOC(),
+   private static Instruction printInst(Register reg, final boolean newLine) {
+      return new Instruction((newLine ? "println" : "print") + " r" + reg.getILOC(),
                               new Register[] {reg},
                               null) {
          public String[] toAssembly() {
             return new String[] {
                "movq %r" + sources[0].getASM() + ", %rsi",
-               "movq $" + InstructionFactory.printName + ", %rdi",
+               "movq $" + (newLine ? InstructionFactory.printlnName : InstructionFactory.printName) + ", %rdi",
                "movq $0, %rax",
+               "push %r10",
                "call printf"
             };
          }
       };
    }
 
+   public static Instruction print(Register reg) {
+      return printInst(reg, false);
+   }
+
    public static Instruction println(Register reg) {
-      return new Instruction("println r" + reg.getILOC(),
-                              new Register[] {reg},
-                              null) {
-         public String[] toAssembly() {
-            return new String[] {
-               "movq %r" + sources[0].getASM() + ", %rsi",
-               "movq $" + InstructionFactory.printlnName + ", %rdi",
-               "movq $0, %rax",
-               "call printf"
-            };
-         }
-      };
+      return printInst(reg, true);
    }
 
    public static Instruction read(Register reg) {
