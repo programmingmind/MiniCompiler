@@ -13,5 +13,21 @@ public abstract class Instruction {
       return text;
    }
 
+   public boolean isJump() {
+      return isJump(false);
+   }
+
+   public boolean isJump(boolean jump) {
+      return text.startsWith("jumpi ") || (!jump && text.startsWith("cbr"));
+   }
+
+   public boolean jumpsToLabel(String label) {
+      return jumpsToLabel(label, false);
+   }
+
+   public boolean jumpsToLabel(String label, boolean jump) {
+      return isJump(jump) && text.contains(label);
+   }
+
    public abstract String[] toAssembly();
 }

@@ -13,6 +13,8 @@ public class Block {
    private ArrayList<Block> successors;
    private HashSet<Block> endBranchSuccessors;
 
+   private boolean hasLeft;
+
    private void init(String func, String which) {
       this.label = func + "_" + which;
       if (func.equals("main") && which.equals("entry"))
@@ -22,6 +24,8 @@ public class Block {
       predecessors = new ArrayList<Block>();
       successors = new ArrayList<Block>();
       endBranchSuccessors = new HashSet<Block>();
+
+      hasLeft = false;
    }
 
    public Block(String func, String which) {
@@ -52,6 +56,9 @@ public class Block {
          successors.add(next);
       if (endBranch)
          endBranchSuccessors.add(next);
+
+      if (! next.predecessors.contains(this))
+         next.predecessors.add(this);
    }
 
    public boolean doesEndBranch(Block b) {
@@ -59,7 +66,12 @@ public class Block {
    }
 
    public void addInstruction(Instruction inst) {
-      instructions.add(inst);
+      if (!hasLeft) {
+         instructions.add(inst);
+         hasLeft = inst.isJump();
+      } else {
+         System.err.println("WARNING: ignoring instruction: " + inst.toIloc());
+      }
    }
 
    public void removeUnnecessaryLVal() {
@@ -105,5 +117,40 @@ public class Block {
       for (Block block : successors)
          sw.append(label + " -> " + block.label + "\n");
       return sw.toString();
+   }
+
+   public boolean verifyLinks(Block next) {
+      List<Block> toRemove = getLinks();
+      boolean hasJump = false;
+
+      for (Instruction inst : instructions) {
+         if (inst.isJump()) {
+            hasJump = true;
+
+            for (Block block : successors)
+               if (inst.jumpsToLabel(block.getLabel()))
+                  toRemove.remove(block);
+         }
+      }
+
+      if (next != null && !hasJump)
+         toRemove.remove(next);
+
+      if (instructions.size() > 0 && next != null) {
+         Instruction last = instructions.get(instructions.size() - 1);
+         if (last.jumpsToLabel(next.getLabel(), true))
+            instructions.remove(last);
+      }
+
+      boolean change = false;
+      for (Block b : toRemove) {
+         successors.remove(b);
+         endBranchSuccessors.remove(b);
+         b.predecessors.remove(this);
+
+         change = true;
+      }
+
+      return change;
    }
 }

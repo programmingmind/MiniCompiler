@@ -228,6 +228,8 @@ function
          returns.pop();
          current.peek().addNext(func.getExit());
 
+         func.cleanBlocks();
+
          func.allocateRegisters();
 
          String[] code = func.getCode();
@@ -285,7 +287,7 @@ statement returns [Type t = null]
  
          if (l.wasStruct)
             current.peek().removeUnnecessaryLVal();
-         
+
          Register reg = store_reg(l).reg;
          if (a.imm != null) {
             current.peek().addInstruction(InstructionFactory.loadi(a.imm, reg));
@@ -406,6 +408,7 @@ statement returns [Type t = null]
             error0("return type doesn't match");
          $t = r.t;
          current.peek().addInstruction(InstructionFactory.ret());
+         current.peek().addNext(func.getExit());
       }
    | invocation { System.out.println("invoking expression"); }
    ;

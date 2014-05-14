@@ -134,15 +134,9 @@ public class Function {
       }
    }
 
-   public String[] getCode() {
-      StringWriter iloc = new StringWriter();
-      StringWriter asm = new StringWriter();
+   private List<Block> sortBlocks() {
       Stack<Block> toVisit = new Stack<Block>();
-      HashSet<Block> visited = new HashSet<Block>();
-      String[] code;
-
-      String[] prefix = InstructionFactory.functionStart(name).toAssembly();
-
+      ArrayList<Block> visited = new ArrayList<Block>();
 
       toVisit.push(entry);
       while (! toVisit.empty()) {
@@ -165,20 +159,40 @@ public class Function {
                   toVisit.push(k);
             }
          }
+      }
+      visited.add(exit);
 
+      return visited;
+   }
+
+   public String[] getCode() {
+      StringWriter iloc = new StringWriter();
+      StringWriter asm = new StringWriter();
+      String[] code;
+
+      String[] prefix = InstructionFactory.functionStart(name).toAssembly();
+
+      for (Block tmp : sortBlocks()) {
          code = tmp == entry ? tmp.getCode(prefix) : tmp.getCode();
          iloc.append(code[0]);
          asm.append(code[1]);
       }
-      code = exit.getCode();
-      iloc.append(code[0]);
-      asm.append(code[1]);
 
       return new String[] {iloc.toString(), asm.toString()};
    }
 
    public void cleanBlocks() {
-      // remove empty blocks
-      // add backward nodes
+      boolean change = true;
+      while (change) {
+         change = false;
+         List<Block> blocks = sortBlocks();
+
+         for (int i = 0; i < blocks.size(); i++) {
+            if (blocks.get(i).verifyLinks((i + 1 < blocks.size()) ? blocks.get(i + 1) : null)) {
+               change = true;
+               break;
+            }
+         }
+      }
    }
 }

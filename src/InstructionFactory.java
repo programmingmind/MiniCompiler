@@ -7,6 +7,9 @@ public class InstructionFactory {
    private static final String[] asmOps = {"e", "ge", "g", "le", "l", "ne"};
    private static final String[] paramRegs = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 
+   private static final String[] registers = {"rbx", "rcx", "rdx", "rsi", "rdi", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"};
+   private static final String TEMP_REG = "rbx";
+
    public static final int NUM_PARAM_REGS = paramRegs.length;
 
    public static final String printName = ".LC0";
