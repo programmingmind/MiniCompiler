@@ -20,8 +20,8 @@ gen/antlr.generated.type : src/TypeCheck.g
 
 clean:
 	rm -f $(FILES)
-	rm -f bin/*.class
+	rm -f bin/*
 	rm -f gen/*
-	rm -f dot/*.dot
-	rm -f iloc/*.il
-	rm -f asm/*.s
+	rm -f dot/*
+	rm -f iloc/*
+	rm -f asm/*
