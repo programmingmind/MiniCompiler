@@ -276,7 +276,7 @@ public class InstructionFactory {
                               null) {
          public String[] toAssembly() {
             return new String[] {
-               "cmp %r" + sources[0].getASM() + ", $" + imm
+               "cmp %r" + sources[0].getASM() + ", " + imm
             };
          }
       };
@@ -483,7 +483,7 @@ public class InstructionFactory {
    public static Instruction storeRet(Register reg) {
       if (! reg.isASMSet())
          reg.setASM("ax");
-      
+
       return new Instruction("storeret r" + reg.getILOC(),
                               new Register[] {reg},
                               null) {
