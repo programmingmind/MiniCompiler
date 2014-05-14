@@ -277,7 +277,7 @@ public class InstructionFactory {
                               null) {
          public String[] toAssembly() {
             return new String[] {
-               "cmp %r" + sources[0].getASM() + ", " + imm
+               "cmp $" + imm + ", %r" + sources[0].getASM()
             };
          }
       };

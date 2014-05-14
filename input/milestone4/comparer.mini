@@ -1,0 +1,15 @@
+fun main() int
+{
+   int x;
+   read x;
+   print x endl;
+   if (x < 1000)
+   {
+      print 1 endl;
+   }
+   else
+   {
+      print 0 endl;
+   }
+   return x;
+}
