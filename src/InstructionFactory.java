@@ -106,6 +106,81 @@ public class InstructionFactory {
       };                       
    }
 
+   private static Instruction mul(final Integer imm, Register left, Register right, Register result) {
+      String iloc = "mult r" + left.getILOC() + ", " + (imm == null ? ("r" + right.getILOC()) : imm) + ", r" + result.getILOC();
+      if (imm == null) {
+         return new Instruction(iloc,
+                                 new Register[] {left, right},
+                                 result) {
+            public String[] toAssembly() {
+               if (sources[0].getASM() == target.getASM()) {
+                  return new String[] {
+                     "imul %r" + sources[1].getASM() + ", %r" + target.getASM()
+                  };
+               } else if (sources[1].getASM() == target.getASM()) {
+                  return new String[] {
+                     "imul %r" + sources[0].getASM() + ", %r" + target.getASM()
+                  };
+               } else {
+                  return new String[] {
+                     "mov %r" + sources[0].getASM() + ", %r" + target.getASM(),
+                     "imul %r" + sources[1].getASM() + ", %r" + target.getASM()
+                  };
+               }
+            }
+         };
+      } else {
+         return new Instruction(iloc,
+                                 new Register[] {left},
+                                 result) {
+            public String[] toAssembly() {
+               if (sources[0].getASM() == target.getASM()) {
+                  return new String[] {
+                     "imul $" + imm + ", %r" + target.getASM()
+                  };
+               }
+               else {
+                  return new String[] {
+                     "imul $" + imm + ", %r" + sources[0].getASM() + ", %r" + target.getASM()
+                  };
+               }
+            }
+         };
+      }
+   }
+
+   private static Instruction div(Register left, Register right, Register result) {
+      String iloc = "div r" + left.getILOC() + ", r" + right.getILOC() + ", r" + result.getILOC();
+      return new Instruction(iloc,
+                              new Register[] {left, right},
+                              result) {
+         public String[] toAssembly() {
+            if (target.getASM().equals("ax")) {
+               return new String[] {
+                  "push %rdx",
+                  "mov %r" + sources[0].getASM() + ", %rax",
+                  "mov %r" + sources[0].getASM() + ", %rdx",
+                  "sarq $63, %rdx",
+                  "idiv %r" + sources[1].getASM(),
+                  "pop %rdx"
+               };
+            } else {
+               return new String[] {
+                  "push %rdx",
+                  "push %rax",
+                  "mov %r" + sources[0].getASM() + ", %rax",
+                  "mov %r" + sources[0].getASM() + ", %rdx",
+                  "sarq $63, %rdx",
+                  "idiv %r" + sources[1].getASM(),
+                  "mov %rax, %r" + target.getASM(),
+                  "pop %rax",
+                  "pop %rdx"
+               };
+            }
+         }
+      };
+   }
+
    public static Instruction arithmetic(final int type, final Integer imm, Register left, Register right, Register result) {
       String op = null;
       switch (type) {
@@ -116,24 +191,16 @@ public class InstructionFactory {
             op = imm == null ? "sub" : "rsubi";
             break;
          case TypeCheck.TIMES:
-            op = "mult";
-            break;
+            return mul(imm, left, right, result);
          case TypeCheck.DIVIDE:
-            op = "div";
-            break;
+            return div(left, right, result);
          default:
             throw new RuntimeException("unkown arithmetic op");
       }
 
       String iloc = op + " r" + left.getILOC() + ", " + (imm == null ? ("r" + right.getILOC()) : imm) + ", r" + result.getILOC();
       if (imm == null) {
-         final String asm;
-         if (type == TypeCheck.TIMES)
-            asm = "imul";
-         else if (type == TypeCheck.DIVIDE)
-            asm = "idiv";
-         else
-            asm = op;
+         final String asm = op;
 
          if (left.getILOC() == result.getILOC()) {
             return new Instruction(iloc,

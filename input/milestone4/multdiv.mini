@@ -1,0 +1,28 @@
+fun mult(int a, int b) int
+{
+   return a * b;
+}
+
+fun imult(int a) int
+{
+   return a * 78;
+}
+
+fun div(int a, int b) int
+{
+   return a / b;
+}
+
+fun idiv(int a) int
+{
+   return a / 2;
+}
+
+fun main() int
+{
+   print mult(3,4) endl;
+   print imult(2) endl;
+   print div(12, 6) endl;
+   print idiv(12) endl;
+   return 0;
+}
