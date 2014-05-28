@@ -2,6 +2,7 @@ import java.io.StringWriter;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -53,6 +54,14 @@ public class Block {
 
    public String getLabel() {
       return label;
+   }
+
+   public List<Instruction> getInstructions() {
+      return Collections.unmodifiableList(instructions);
+   }
+
+   public void removeInstruction(Instruction inst) {
+      instructions.remove(inst);
    }
 
    public void addNext(Block next) {

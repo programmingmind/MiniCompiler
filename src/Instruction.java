@@ -21,6 +21,17 @@ public abstract class Instruction {
       return target;
    }
 
+   public void replace(Register from, Register to) {
+      for (int i = 0; i < sources.length; i++)
+         if (sources[i] == from)
+            sources[i] = to;
+
+      if (target == from)
+         target = to;
+
+      text = text.replaceAll("r" + from.getILOC(), "r" + to.getILOC());
+   }
+
    public boolean isJump() {
       return isJump(false);
    }
@@ -35,6 +46,13 @@ public abstract class Instruction {
 
    public boolean jumpsToLabel(String label, boolean jump) {
       return isJump(jump) && text.contains(label);
+   }
+
+   public boolean usesReg(Register reg) {
+      for (Register r : sources)
+         if (r == reg)
+            return true;
+      return false;
    }
 
    public abstract String[] toAssembly();

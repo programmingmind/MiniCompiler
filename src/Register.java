@@ -4,6 +4,8 @@ public class Register {
    private int iloc;
    private String asm;
 
+   private boolean canPropogate = true;
+
    private HashMap<Block, int[]> range;
 
    public Register(int iloc) {
@@ -11,6 +13,14 @@ public class Register {
       this.asm = null;
 
       range = new HashMap<Block, int[]>();
+   }
+
+   public boolean canBePropogated() {
+      return canPropogate;
+   }
+
+   public void disablePropogation() {
+      canPropogate = false;
    }
 
    public void setASM(String asm) {

@@ -1,0 +1,21 @@
+fun foo (int i, int j) int
+{
+   int a;
+   a = 0;
+   if (i < 3642)
+   {
+      a = i;
+   }
+   else
+   {
+      a = j;
+   }
+
+   return a + 4;
+}
+
+fun main() int
+{
+   foo(4764, 763);
+   return 0;
+}

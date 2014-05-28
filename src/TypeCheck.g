@@ -46,8 +46,8 @@ error [int line, String text]
    : { if (true) throw new RuntimeException($line + " : " + $text); }
    ;
 
-verify [boolean outputIloc, String fileName]
-   : program [outputIloc, fileName]
+verify [boolean outputIloc, String fileName, boolean removeDeadCode, boolean performCopyPropogation]
+   : program [outputIloc, fileName, removeDeadCode, performCopyPropogation]
       {
          System.out.print("Type checking passed");
          if (outputIloc)
@@ -60,7 +60,7 @@ verify [boolean outputIloc, String fileName]
    | { System.out.println("not a valid AST"); }
    ;
 
-program [boolean outputIloc, String fileName]
+program [boolean outputIloc, String fileName, boolean removeDeadCode, boolean performCopyPropogation]
    @init
    {
       stables = new Stack<SymbolTable>();
@@ -107,7 +107,7 @@ program [boolean outputIloc, String fileName]
                ioe.printStackTrace();
             }
          }
-         functions)
+         functions[removeDeadCode, performCopyPropogation])
       {
          try {
             asmBW.close();
@@ -195,11 +195,11 @@ id_list [Type t, SymbolTable stable]
       )+
    ;
 
-functions
-   : ^(FUNCS function*)
+functions [boolean removeDeadCode, boolean performCopyPropogation]
+   : ^(FUNCS function[removeDeadCode, performCopyPropogation]*)
    ;
 
-function
+function [boolean removeDeadCode, boolean performCopyPropogation]
    @init
    {
       SymbolTable vars = new SymbolTable();
@@ -229,6 +229,11 @@ function
          current.peek().addNext(func.getExit());
 
          func.cleanBlocks();
+         if (performCopyPropogation)
+            func.performCopyPropogation();
+         
+         if (removeDeadCode)
+            func.removeUselessInstructions();
 
          func.allocateRegisters();
 
@@ -513,7 +518,7 @@ expression returns [Type t = null, Register reg = null, Integer imm = null]
                rReg = b.reg;
             }
 
-            if (tmpi != null && op.getType() != PLUS) {
+            if (tmpi != null && op.getType() == DIVIDE) {
                rReg = func.getNextRegister();
                current.peek().addInstruction(InstructionFactory.loadi(tmpi, rReg));
                tmpi = null;

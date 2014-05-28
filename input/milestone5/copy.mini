@@ -1,0 +1,15 @@
+fun main() int
+{
+   int a, b, c, d, e;
+   a = 4;
+   print a endl;
+   b = a;
+   print b endl;
+   c = b;
+   print c endl;
+   d = c;
+   print d endl;
+   e = d;
+   print e endl;
+   return 0;
+}

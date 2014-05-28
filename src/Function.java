@@ -199,6 +199,135 @@ public class Function {
       }
    }
 
+   private void replaceIfPossible(Instruction i) {
+      Register source = i.getSources()[0];
+      Register target = i.getTarget();
+
+      if (! target.canBePropogated())
+         return;
+
+      List<Block> blocks = sortBlocks();
+      boolean seen = false;
+      boolean newlySet = false;
+
+      Register tmp = null, other = null;
+
+      ArrayList<Instruction> toReplace = new ArrayList<Instruction>();
+      toReplace.add(i);
+
+      for (Block b : blocks) {
+         for (Instruction inst : b.getInstructions()) {
+            if (! seen) {
+               seen = inst == i;
+               continue;
+            }
+
+            if (inst.getTarget() == target && inst.toIloc().startsWith("mov ")) {
+               target.disablePropogation();
+               return;
+            }
+
+            if (newlySet) {
+               if (inst.usesReg(other) || inst.getTarget() == other)
+                  return;
+
+               if (inst.usesReg(tmp) || inst.getTarget() == tmp)
+                  toReplace.add(inst);
+
+               continue;
+            }
+
+            if (inst.usesReg(target))
+               toReplace.add(inst);
+
+            if (inst.getTarget() == source || inst.getTarget() == target) {
+               tmp = inst.getTarget();
+               other = tmp == source ? target : source;
+               newlySet = true;
+            }
+         }
+      }
+
+      System.out.println("replacing " + target.getILOC() + " with " + source.getILOC());
+
+      for (Instruction inst : toReplace)
+         inst.replace(target, source);
+   }
+
+   public void performCopyPropogation() {
+      List<Block> blocks = sortBlocks();
+
+      for (Block b : blocks)
+         for (Instruction i : b.getInstructions())
+            if (i.toIloc().startsWith("mov "))
+               replaceIfPossible(i);
+   }
+
+   private boolean usedBeforeNextSet(Instruction i) {
+      Register target = i.getTarget();
+      if (target == null)
+         return true;
+
+      boolean seen = false;
+      List<Block> blocks = sortBlocks();
+
+      for (Block b : blocks) {
+         for (Instruction inst : b.getInstructions()) {
+            if (! seen) {
+               seen = inst == i;
+               continue;
+            }
+
+            for (Register r : inst.getSources()) {
+               if (r == target)
+                  return true;
+
+            if (inst.getTarget() == target)
+               return false;
+            }
+         }
+      }
+
+      return false;
+   }
+
+   public void removeUselessInstructions() {
+      List<Block> blocks = sortBlocks();
+      boolean change = true;
+
+      while (change) {
+         change = false;
+
+         for (Block b : blocks) {
+            Instruction toRemove = null;
+
+            for (Instruction inst : b.getInstructions()) {
+               if (! usedBeforeNextSet(inst)) {
+                  change = true;
+                  toRemove = inst;
+                  break;
+               }
+            }
+
+            if (toRemove != null) {
+               b.removeInstruction(toRemove);
+               break;
+            }
+         }
+      }
+
+      // remove useless movs
+      for (Block b : blocks) {
+         ArrayList<Instruction> toRemove = new ArrayList<Instruction>();
+         for (Instruction i : b.getInstructions())
+            if (i.toIloc().startsWith("mov ") && i.getSources()[0] == i.getTarget())
+               toRemove.add(i);
+
+         for (Instruction i : toRemove)
+            b.removeInstruction(i);
+      }
+   }
+
    private void computeLiveRanges() {
       List<Block> blocks = sortBlocks();
       boolean change = true;

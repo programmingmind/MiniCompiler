@@ -31,10 +31,14 @@ public class Mini
 
    private static final String DISPLAYAST = "-displayAST";
    private static final String OUTPUTILOC = "-dumpIL";
+   private static final String REMOVEDEADCODE = "-remDead";
+   private static final String COPYPROPAGATION = "-copyProp";
 
    private static String _inputFile = null;
    private static boolean _displayAST = false;
    private static boolean _outputIloc = false;
+   private static boolean _removeDead = false;
+   private static boolean _copyProp = false;
 
    private static void parseParameters(String [] args)
    {
@@ -46,6 +50,12 @@ public class Mini
          }
          else if (args[i].equals(OUTPUTILOC)) {
             _outputIloc = true;
+         }
+         else if (args[i].equals(REMOVEDEADCODE)) {
+            _removeDead = true;
+         }
+         else if (args[i].equals(COPYPROPAGATION)) {
+            _copyProp = true;
          }
          else if (args[i].charAt(0) == '-')
          {
@@ -92,7 +102,7 @@ public class Mini
          nodes.setTokenStream(tokens);
          TypeCheck tparser = new TypeCheck(nodes);
 
-         tparser.verify(_outputIloc, _inputFile);
+         tparser.verify(_outputIloc, _inputFile, _removeDead, _copyProp);
       }
       catch (org.antlr.runtime.RecognitionException e)
       {
