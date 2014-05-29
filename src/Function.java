@@ -270,11 +270,14 @@ public class Function {
 
       boolean seen = false;
       List<Block> blocks = sortBlocks();
+      Block orig = null;
 
       for (Block b : blocks) {
          for (Instruction inst : b.getInstructions()) {
             if (! seen) {
                seen = inst == i;
+               if (seen)
+                  orig = b;
                continue;
             }
 
@@ -282,8 +285,8 @@ public class Function {
                if (r == target)
                   return true;
 
-            if (inst.getTarget() == target)
-               return false;
+            if (inst.getTarget() == target && ! inst.isConditionalTarget())
+               return orig != b;
             }
          }
       }

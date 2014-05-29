@@ -32,6 +32,10 @@ public abstract class Instruction {
       text = text.replaceAll("r" + from.getILOC(), "r" + to.getILOC());
    }
 
+   public boolean isConditionalTarget() {
+      return text.matches("mov\\w+ ccr, r\\d+, r\\d+");
+   }
+
    public boolean isJump() {
       return isJump(false);
    }
@@ -56,4 +60,8 @@ public abstract class Instruction {
    }
 
    public abstract String[] toAssembly();
+
+   public String toString() {
+      return "iloc: " + text;
+   }
 }
