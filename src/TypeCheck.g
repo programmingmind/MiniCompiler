@@ -570,10 +570,10 @@ expression returns [Type t = null, Register reg = null, Integer imm = null]
             current.peek().addInstruction(InstructionFactory.bool(op.getType(), lReg, rReg, $reg = func.getNextRegister()));
          }
       }
-   | ^(op=(LT | GT | NE | LE | GE) a=expression b=expression)
+   | ^(op=(LT | GT | LE | GE) a=expression b=expression)
       {
          if (! (a.t.isInt() && b.t.isInt()))
-            error0("numeric comparisons need ints");
+            error($op.line, "numeric comparisons need ints");
          $t=Type.boolType();
 
          if (a.imm != null && b.imm != null) {
@@ -583,9 +583,6 @@ expression returns [Type t = null, Register reg = null, Integer imm = null]
                   break;
                case GT:
                   $imm = a.imm > b.imm ? 1 : 0;
-                  break;
-               case NE:
-                  $imm = a.imm != b.imm ? 1 : 0;
                   break;
                case LE:
                   $imm = a.imm <= b.imm ? 1 : 0;
@@ -622,21 +619,21 @@ expression returns [Type t = null, Register reg = null, Integer imm = null]
             current.peek().addInstruction(InstructionFactory.ccmove(op.getType(), reverse, tmp, $reg));
          }
       }
-   | ^(EQ a=expression b=expression)
+   | ^(op = (EQ | NE) a=expression b=expression)
       {
          if (! (a.t.equals(b.t)))
-            error($EQ.line, "types are wrong");
+            error($op.line, "types are wrong");
          $t=Type.boolType();
 
          if (a.imm != null && b.imm != null) {
-            $imm = a.imm.equals(b.imm) ? 1 : 0;
+            $imm = a.imm.equals(b.imm) == (op.getType() == EQ) ? 1 : 0;
          } else if (a.imm == null && b.imm == null) {
             $reg = func.getNextRegister();
             Register tmp = func.getNextRegister();
             current.peek().addInstruction(InstructionFactory.loadi(0, $reg));
             current.peek().addInstruction(InstructionFactory.loadi(1, tmp));
             current.peek().addInstruction(InstructionFactory.comp(a.reg, b.reg));
-            current.peek().addInstruction(InstructionFactory.ccmove(EQ, false, tmp, $reg));
+            current.peek().addInstruction(InstructionFactory.ccmove(op.getType(), false, tmp, $reg));
          } else {
             Register tmpReg;
             Integer tmpImm;
@@ -652,7 +649,7 @@ expression returns [Type t = null, Register reg = null, Integer imm = null]
             current.peek().addInstruction(InstructionFactory.loadi(0, $reg));
             current.peek().addInstruction(InstructionFactory.loadi(1, tmp));
             current.peek().addInstruction(InstructionFactory.compi(tmpReg, tmpImm));
-            current.peek().addInstruction(InstructionFactory.ccmove(EQ, false, tmp, $reg));
+            current.peek().addInstruction(InstructionFactory.ccmove(op.getType(), false, tmp, $reg));
          }
       }
    | l=lvalue { $t=l.t; $reg=l.reg; }
