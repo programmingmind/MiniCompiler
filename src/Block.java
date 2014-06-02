@@ -22,6 +22,8 @@ public class Block {
 
    private boolean hasLeft;
 
+   private String function;
+
    private void init(String func, String which) {
       this.label = func + "_" + which;
       if (func.equals("main") && which.equals("entry"))
@@ -35,6 +37,8 @@ public class Block {
       leaving = new HashSet<Register>();
 
       hasLeft = false;
+
+      this.function = func;
    }
 
    public Block(String func, String which) {
@@ -83,7 +87,10 @@ public class Block {
    }
 
    public void addInstruction(Instruction inst) {
-      if (!hasLeft) {
+      Block pre = (Functions.isDefined(function) && Functions.get(function).getLoopDepth() > 0) ? Functions.get(function).getEntry() : null;
+      if (pre != null && pre != this && inst.toIloc().startsWith("loadinargument")) {
+         pre.addInstruction(inst);
+      } else if (!hasLeft) {
          instructions.add(inst);
          hasLeft = inst.isJump();
       } else {
@@ -225,8 +232,18 @@ public class Block {
       registers = new HashSet<Register>(start.keySet());
       registers.addAll(end.keySet());
 
-      for (Register register : registers)
+      for (Register register : registers) {
+         if (start.get(register) == null) {
+            System.err.println("WARNING: could not compute start of live range for r" + register.getILOC());
+            start.put(register, -1);
+         }
+         if (end.get(register) == null) {
+            System.err.println("WARNING: could not compute end of live range for r" + register.getILOC());
+            end.put(register, instructions.size());
+         }
+
          register.setRange(this, start.get(register), end.get(register));
+      }
    }
 
    public void allocateRegisters() {

@@ -20,6 +20,8 @@ public class Function {
    private int currentRegister;
    private ArrayList<Register> usedRegs;
 
+   private int loopDepth;
+
    public Function(String name, Type returnType, SymbolTable vars) {
       this.name = name;
       this.returnType = returnType;
@@ -34,6 +36,8 @@ public class Function {
 
       for (String var : vars.getLocals())
          putVarRegister(var, getNextRegister());
+
+      loopDepth = 0;
    }
 
    public String getName() {
@@ -84,6 +88,18 @@ public class Function {
       Register reg = new Register(currentRegister++);
       usedRegs.add(reg);
       return reg;
+   }
+
+   public void enterLoop() {
+      ++loopDepth;
+   }
+
+   public void exitLoop() {
+      --loopDepth;
+   }
+
+   public int getLoopDepth() {
+      return loopDepth;
    }
 
    public Register getVarRegister(String varName) {

@@ -369,6 +369,7 @@ statement returns [Type t = null]
          token=WHILE
          {
             next.push(new Block(func.getName()));
+            func.enterLoop();
          }
          a=expression b=block {current.push(b.last);} e=expression {current.pop();}
       )
@@ -400,6 +401,8 @@ statement returns [Type t = null]
          current.peek().addNext(next.peek(), true);
          current.pop();
          current.push(next.pop());
+
+         func.exitLoop();
       }
    | ^(DELETE a=expression)
       {
