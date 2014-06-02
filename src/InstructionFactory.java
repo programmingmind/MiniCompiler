@@ -14,7 +14,7 @@ public class InstructionFactory {
 
    public static final String printName = ".LC0";
    public static final String printlnName = ".LC1";
-   public static final String readName = ".LC0";
+   public static final String readName = ".LC2";
 
    private static Functions funcs;
    private static String currentFunction;
@@ -33,6 +33,8 @@ public class InstructionFactory {
             +"\t.string \"%ld \"\n"
             +printlnName + ":\n"
             +"\t.string \"%ld\\n\"\n"
+            +"\t.string \"%ld\"\n"
+            +readName + ":\n"
             +"\t.text\n"
             +".globl main\n"
             +"\t.type main, @function\n";
