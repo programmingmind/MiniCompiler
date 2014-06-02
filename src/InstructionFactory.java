@@ -557,8 +557,8 @@ public class InstructionFactory {
       };
    }
 
-   public static Instruction storeRet(Register reg) {
-      if (! reg.isASMSet())
+   public static Instruction storeRet(Register reg, int conditionalDepth) {
+      if (! reg.isASMSet() && conditionalDepth == 0)
          reg.setASM("ax");
 
       return new Instruction("storeret r" + reg.getILOC(),

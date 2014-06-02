@@ -38,6 +38,7 @@ options
    private BufferedWriter asmBW = null;
 
    private boolean inAssign;
+   private int conditionalDepth;
 }
 
 error0 [String text]
@@ -208,6 +209,7 @@ function [boolean removeDeadCode, boolean performCopyPropogation]
       next = new Stack<Block>();
       current = new Stack<Block>();
       inAssign = false;
+      conditionalDepth = 0;
    }
    : ^(
          FUN id=ID parameters[vars] ^(RETTYPE rt=return_type) declarations[vars]
@@ -334,6 +336,7 @@ statement returns [Type t = null]
          token=IF
          {
             next.push(new Block(func.getName()));
+            conditionalDepth++;
          }
          a=expression b=block b2=block?
       )
@@ -368,6 +371,8 @@ statement returns [Type t = null]
          }
          current.pop();
          current.push(next.pop());
+
+         conditionalDepth--;
       }
    | ^(
          token=WHILE
@@ -469,7 +474,7 @@ ret returns [Type t = null]
 
          if (tmp.imm != null)
             current.peek().addInstruction(InstructionFactory.loadi(tmp.imm, tmp.reg = func.getNextRegister()));
-         current.peek().addInstruction(InstructionFactory.storeRet(tmp.reg));
+         current.peek().addInstruction(InstructionFactory.storeRet(tmp.reg, conditionalDepth));
       }
    | RETURN
       {
