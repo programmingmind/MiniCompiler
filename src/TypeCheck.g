@@ -370,7 +370,7 @@ statement returns [Type t = null]
          {
             next.push(new Block(func.getName()));
          }
-         a=expression b=block e=expression
+         a=expression b=block {current.push(b.last);} e=expression {current.pop();}
       )
       {
          if (! (a.t.isBool() && e.t.isBool()))
