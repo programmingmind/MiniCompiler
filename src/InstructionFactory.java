@@ -575,7 +575,11 @@ public class InstructionFactory {
                               null) {
          public String[] toAssembly() {
             return new String[] {
-               "call " + label
+               "push %r10",
+               "push %r11",
+               "call " + label,
+               "pop %r11",
+               "pop %r10"
             };
          }
       };
@@ -615,7 +619,11 @@ public class InstructionFactory {
          public String[] toAssembly() {
             return new String[] {
                "movq $" + num + ", %rdi",
+               "push %r10",
+               "push %r11",
                "call malloc",
+               "pop %r11",
+               "pop %r10"
                "mov %rax, %r" + target.getASM()
             };
          }
@@ -629,7 +637,11 @@ public class InstructionFactory {
          public String[] toAssembly() {
             return new String[] {
                "mov %r" + sources[0].getASM() + ", %rdi",
-               "call free"
+               "push %r10",
+               "push %r11",
+               "call free",
+               "pop %r11",
+               "pop %r10"
             };
          }
       };
@@ -645,7 +657,9 @@ public class InstructionFactory {
                "movq $" + (newLine ? InstructionFactory.printlnName : InstructionFactory.printName) + ", %rdi",
                "movq $0, %rax",
                "push %r10",
+               "push %r11",
                "call printf",
+               "pop %r11",
                "pop %r10"
             };
          }
@@ -670,7 +684,11 @@ public class InstructionFactory {
                "movq $" + InstructionFactory.readName + ", %rdi",
                "movq %r" + target.getASM() + ", %rsi",
                "movq $0, %rax",
+               "push %r10",
+               "push %r11",
                "call scanf",
+               "pop %r11",
+               "pop %r10",
                "mov 8(%rsp), %r" + target.getASM()
             };
          }
