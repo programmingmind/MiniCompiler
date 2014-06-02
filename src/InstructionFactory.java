@@ -30,7 +30,7 @@ public class InstructionFactory {
    public static String getProgramHeader() {
       return "\t.section .rodata\n"
             +printName + ":\n"
-            +"\t.string \"%ld\"\n"
+            +"\t.string \"%ld \"\n"
             +printlnName + ":\n"
             +"\t.string \"%ld\\n\"\n"
             +"\t.text\n"
