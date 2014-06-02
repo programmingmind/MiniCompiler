@@ -50,8 +50,8 @@ public class Register {
          int[] blockRange = range.get(b);
          int[] otherRange = r.range.get(b);
          if (otherRange != null) {
-            if ((blockRange[0] <= otherRange[0] && blockRange[1] >= otherRange[1]) ||
-                (otherRange[0] <= blockRange[0] && otherRange[1] >= blockRange[1]))
+            if ((blockRange[0] <= otherRange[1] && blockRange[1] >= otherRange[1]) ||
+                (otherRange[0] <= blockRange[1] && otherRange[1] >= blockRange[1]))
                return true;
          }
       }
