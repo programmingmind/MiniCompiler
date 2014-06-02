@@ -35,7 +35,7 @@ public abstract class Instruction {
       if (target == from)
          target = to;
 
-      text = text.replaceAll("r" + from.getILOC() + "[^d]?", "r" + to.getILOC());
+      text = text.replaceAll("r" + from.getILOC() + "(\\D|$)", "r" + to.getILOC() + "$1");
    }
 
    public boolean isConditionalTarget() {
