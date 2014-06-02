@@ -567,6 +567,32 @@ expression returns [Type t = null, Register reg = null, Integer imm = null]
 
          if (a.imm != null && b.imm != null) {
             $imm = op.getType() == AND ? (a.imm & b.imm) : (a.imm | b.imm);
+         } else if (a.imm != null || b.imm != null) {
+            Integer imm;
+            Register reg;
+            if (a.imm != null) {
+               imm = a.imm;
+               reg = b.reg;
+            } else {
+               imm = b.imm;
+               reg = a.reg;
+            }
+
+            if (op.getType() == AND) {
+               if (imm == 0) {
+                  System.err.println($op.line + ": expression is always false");
+                  $imm = 0;
+               } else {
+                  $reg = reg;
+               }
+            } else {
+               if (imm == 0) {
+                  $reg = reg;
+               } else {
+                  System.err.println($op.line + ": expression is always true");
+                  $imm = 1;
+               }
+            }
          } else {
             Register lReg = a.reg;
             Register rReg = b.reg;
