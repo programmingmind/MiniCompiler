@@ -420,12 +420,13 @@ public class InstructionFactory {
       };
    }
 
-   public static Instruction loadArg(String var, int num, Register reg) {
+   public static Instruction loadArg(String var, int num, Register reg, boolean noMove) {
       if (num < NUM_PARAM_REGS) {
          final String regName = paramRegs[num];
          return new Instruction("loadinargument " + var + ", " + num + ", r" + reg.getILOC(),
                                  new Register[] {},
-                                 reg) {
+                                 reg,
+                                 !noMove) {
             public String[] toAssembly() {
                return new String[] {
                   "movq %" + regName + ", %r" + target.getASM()

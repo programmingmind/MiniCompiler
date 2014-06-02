@@ -36,6 +36,8 @@ options
    private FileWriter asmFW = null;
    private BufferedWriter ilocBW = null;
    private BufferedWriter asmBW = null;
+
+   private boolean inAssign;
 }
 
 error0 [String text]
@@ -205,6 +207,7 @@ function [boolean removeDeadCode, boolean performCopyPropogation]
       SymbolTable vars = new SymbolTable();
       next = new Stack<Block>();
       current = new Stack<Block>();
+      inAssign = false;
    }
    : ^(
          FUN id=ID parameters[vars] ^(RETTYPE rt=return_type) declarations[vars]
@@ -284,7 +287,7 @@ statement returns [Type t = null]
          current.pop().addNext(b.blk);
          current.push(next.pop());
       }
-   | ^(ASSIGN a=expression l=lvalue)
+   | ^(ASSIGN {inAssign = true;} a=expression l=lvalue)
       {
          System.out.println("Here I be assigning");
          if (! a.t.equals(l.t))
@@ -300,6 +303,7 @@ statement returns [Type t = null]
             current.peek().addInstruction(InstructionFactory.mov(a.reg, reg));
          }
          store_val(reg, l);
+         inAssign = false;
       }
    | ^(PRINT a=expression ENDL?)
       {
@@ -713,7 +717,7 @@ lvalue returns [Type t = null, Register reg = null, String name = null, boolean 
          if ($reg == null) {
             if (stable.isFormal($id.text)) {
                func.putVarRegister($id.text, $reg = func.getNextRegister());
-               current.peek().addInstruction(InstructionFactory.loadArg($id.text, func.getParamIndex($id.text), $reg));
+               current.peek().addInstruction(InstructionFactory.loadArg($id.text, func.getParamIndex($id.text), $reg, inAssign));
             } else {
                current.peek().addInstruction(InstructionFactory.loadGlobal($id.text, $reg = func.getNextRegister()));
                $global = true;
@@ -747,7 +751,7 @@ dot_load returns [Type t = null, Register reg = null]
          if ($reg == null) {
             if (stable.isFormal($id.text)) {
                func.putVarRegister($id.text, $reg = func.getNextRegister());
-               current.peek().addInstruction(InstructionFactory.loadArg($id.text, func.getParamIndex($id.text), $reg));
+               current.peek().addInstruction(InstructionFactory.loadArg($id.text, func.getParamIndex($id.text), $reg, inAssign));
             }
             else
                current.peek().addInstruction(InstructionFactory.globalAddr($id.text, $reg = func.getNextRegister()));

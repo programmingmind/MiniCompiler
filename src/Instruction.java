@@ -1,12 +1,18 @@
 public abstract class Instruction {
    private String text;
+   private boolean moveable;
    protected Register[] sources;
    protected Register target;
 
-   public Instruction(String text, Register[] sources, Register target) {
+   public Instruction(String text, Register[] sources, Register target, boolean moveable) {
       this.text = text;
       this.sources = sources;
       this.target = target;
+      this.moveable = moveable;
+   }
+
+   public Instruction(String text, Register[] sources, Register target) {
+      this(text, sources, target, true);
    }
 
    public String toIloc() {
@@ -50,6 +56,10 @@ public abstract class Instruction {
 
    public boolean jumpsToLabel(String label, boolean jump) {
       return isJump(jump) && text.contains(label);
+   }
+
+   public boolean isMoveable() {
+      return moveable;
    }
 
    public boolean usesReg(Register reg) {
