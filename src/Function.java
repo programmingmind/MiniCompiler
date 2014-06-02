@@ -321,6 +321,9 @@ public class Function {
             Instruction toRemove = null;
 
             for (Instruction inst : b.getInstructions()) {
+               if (inst.toIloc().startsWith("storeai"))
+                  continue;
+               
                if (! usedBeforeNextSet(inst)) {
                   change = true;
                   toRemove = inst;
