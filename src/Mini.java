@@ -31,14 +31,15 @@ public class Mini
 
    private static final String DISPLAYAST = "-displayAST";
    private static final String OUTPUTILOC = "-dumpIL";
-   private static final String REMOVEDEADCODE = "-remDead";
-   private static final String COPYPROPAGATION = "-copyProp";
+   private static final String KEEPDEADCODE = "-keepDead";
+   private static final String NOCOPY = "-noCopyProp";
 
    private static String _inputFile = null;
    private static boolean _displayAST = false;
    private static boolean _outputIloc = false;
-   private static boolean _removeDead = false;
-   private static boolean _copyProp = false;
+   private static boolean _removeDead = true;
+   private static boolean _copyProp = true;
+   private static boolean _foldConstants = true;
 
    private static void parseParameters(String [] args)
    {
@@ -51,11 +52,11 @@ public class Mini
          else if (args[i].equals(OUTPUTILOC)) {
             _outputIloc = true;
          }
-         else if (args[i].equals(REMOVEDEADCODE)) {
-            _removeDead = true;
+         else if (args[i].equals(KEEPDEADCODE)) {
+            _removeDead = false;
          }
-         else if (args[i].equals(COPYPROPAGATION)) {
-            _copyProp = true;
+         else if (args[i].equals(NOCOPY)) {
+            _copyProp = false;
          }
          else if (args[i].charAt(0) == '-')
          {
