@@ -623,7 +623,7 @@ public class InstructionFactory {
                "push %r11",
                "call malloc",
                "pop %r11",
-               "pop %r10"
+               "pop %r10",
                "mov %rax, %r" + target.getASM()
             };
          }
