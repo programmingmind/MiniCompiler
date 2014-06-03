@@ -656,6 +656,8 @@ public class InstructionFactory {
                               null) {
          public String[] toAssembly() {
             return new String[] {
+               "push %rsi",
+               "push %rdi",
                "movq %r" + sources[0].getASM() + ", %rsi",
                "movq $" + (newLine ? InstructionFactory.printlnName : InstructionFactory.printName) + ", %rdi",
                "movq $0, %rax",
@@ -663,7 +665,9 @@ public class InstructionFactory {
                "push %r11",
                "call printf",
                "pop %r11",
-               "pop %r10"
+               "pop %r10",
+               "pop %rdi",
+               "pop %rsi"
             };
          }
       };

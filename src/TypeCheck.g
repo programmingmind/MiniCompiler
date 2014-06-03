@@ -557,9 +557,10 @@ expression returns [Type t = null, Register reg = null, Integer imm = null]
          } else if (a.imm != null && b.imm != null) {
             $imm = a.imm - b.imm;
          } else if (a.imm != null) {
-            current.peek().addInstruction(InstructionFactory.arithmetic(MINUS, a.imm, b.reg, null, $reg = func.getNextRegister()));
+            current.peek().addInstruction(InstructionFactory.arithmetic(PLUS, -a.imm, b.reg, null, $reg = func.getNextRegister()));
+            current.peek().addInstruction(InstructionFactory.arithmetic(TIMES, -1, $reg, null, $reg));
          } else if (b.imm != null) {
-            current.peek().addInstruction(InstructionFactory.arithmetic(PLUS, -b.imm, a.reg, null, $reg = func.getNextRegister()));
+            current.peek().addInstruction(InstructionFactory.arithmetic(MINUS, b.imm, a.reg, null, $reg = func.getNextRegister()));
          } else {
             current.peek().addInstruction(InstructionFactory.arithmetic(MINUS, null, a.reg, b.reg, $reg = func.getNextRegister()));
          }
