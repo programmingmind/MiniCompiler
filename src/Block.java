@@ -96,8 +96,8 @@ public class Block {
    }
 
    public void addInstruction(Instruction inst) {
-      Block pre = (Functions.isDefined(function) && Functions.get(function).getLoopDepth() > 0) ? Functions.get(function).getEntry() : null;
-      if (inst.isMoveable() && pre != null && inst.toIloc().startsWith("loadinargument")) {
+      Block pre = (Functions.isDefined(function) && Functions.get(function).getLoopDepth() > 0) ? Functions.get(function).getEntry() : this;
+      if (inst.isMoveable() && inst.toIloc().startsWith("loadinargument")) {
          pre.addBeforeCalls(inst);
       } else if (!hasLeft) {
          instructions.add(inst);
