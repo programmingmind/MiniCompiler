@@ -426,7 +426,7 @@ public class InstructionFactory {
          return new Instruction("loadinargument " + var + ", " + num + ", r" + reg.getILOC(),
                                  new Register[] {},
                                  reg,
-                                 !noMove) {
+                                 noMove ? Instruction.Types.IMMOVEABLE : Instruction.Types.NORMAL) {
             public String[] toAssembly() {
                return new String[] {
                   "movq %" + regName + ", %r" + target.getASM()
@@ -575,7 +575,8 @@ public class InstructionFactory {
    public static Instruction call(final String label) {
       return new Instruction("call " + label,
                               new Register[] {},
-                              null) {
+                              null,
+                              Instruction.Types.CALL) {
          public String[] toAssembly() {
             return new String[] {
                "push %r10",
@@ -618,7 +619,8 @@ public class InstructionFactory {
    public static Instruction newAlloc(final int num, Register reg) {
       return new Instruction("new " + num + ", r" + reg.getILOC(),
                               new Register[] {},
-                              reg) {
+                              reg,
+                              Instruction.Types.CALL) {
          public String[] toAssembly() {
             return new String[] {
                "movq $" + num + ", %rdi",
@@ -636,7 +638,8 @@ public class InstructionFactory {
    public static Instruction del(Register reg) {
       return new Instruction("del r" + reg.getILOC(),
                               new Register[] {reg},
-                              null) {
+                              null,
+                              Instruction.Types.CALL) {
          public String[] toAssembly() {
             return new String[] {
                "mov %r" + sources[0].getASM() + ", %rdi",
@@ -653,7 +656,8 @@ public class InstructionFactory {
    private static Instruction printInst(Register reg, final boolean newLine) {
       return new Instruction((newLine ? "println" : "print") + " r" + reg.getILOC(),
                               new Register[] {reg},
-                              null) {
+                              null,
+                              Instruction.Types.CALL) {
          public String[] toAssembly() {
             return new String[] {
                "push %rsi",
@@ -684,7 +688,8 @@ public class InstructionFactory {
    public static Instruction read(Register reg) {
       return new Instruction("read r" + reg.getILOC(),
                               new Register[] {},
-                              reg) {
+                              reg,
+                              Instruction.Types.CALL) {
          public String[] toAssembly() {
             return new String[] {
                "leaq 8(%rsp), %r" + target.getASM(),

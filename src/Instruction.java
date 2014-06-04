@@ -1,18 +1,22 @@
 public abstract class Instruction {
+   public static enum Types {
+      NORMAL, IMMOVEABLE, CALL
+   };
+
    private String text;
-   private boolean moveable;
+   private Types type;
    protected Register[] sources;
    protected Register target;
 
-   public Instruction(String text, Register[] sources, Register target, boolean moveable) {
+   public Instruction(String text, Register[] sources, Register target, Types type) {
       this.text = text;
       this.sources = sources;
       this.target = target;
-      this.moveable = moveable;
+      this.type = type;
    }
 
    public Instruction(String text, Register[] sources, Register target) {
-      this(text, sources, target, true);
+      this(text, sources, target, Types.NORMAL);
    }
 
    public String toIloc() {
@@ -59,7 +63,11 @@ public abstract class Instruction {
    }
 
    public boolean isMoveable() {
-      return moveable;
+      return type != Types.IMMOVEABLE;
+   }
+
+   public boolean isCall() {
+      return type == Types.CALL;
    }
 
    public boolean usesReg(Register reg) {

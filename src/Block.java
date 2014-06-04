@@ -86,10 +86,19 @@ public class Block {
       return endBranchSuccessors.contains(b);
    }
 
+   private void addBeforeCalls(Instruction inst) {
+      int pos;
+      for (pos = 0; pos < instructions.size(); pos++)
+         if (instructions.get(pos).isCall())
+            break;
+
+      instructions.add(pos, inst);
+   }
+
    public void addInstruction(Instruction inst) {
       Block pre = (Functions.isDefined(function) && Functions.get(function).getLoopDepth() > 0) ? Functions.get(function).getEntry() : null;
-      if (inst.isMoveable() && pre != null && pre != this && inst.toIloc().startsWith("loadinargument")) {
-         pre.addInstruction(inst);
+      if (inst.isMoveable() && pre != null && inst.toIloc().startsWith("loadinargument")) {
+         pre.addBeforeCalls(inst);
       } else if (!hasLeft) {
          instructions.add(inst);
          hasLeft = inst.isJump();
