@@ -33,13 +33,14 @@ public class Mini
    private static final String OUTPUTILOC = "-dumpIL";
    private static final String KEEPDEADCODE = "-keepDead";
    private static final String NOCOPY = "-noCopyProp";
+   private static final String PRESERVECONST = "-preserveConst";
 
    private static String _inputFile = null;
    private static boolean _displayAST = false;
    private static boolean _outputIloc = false;
    private static boolean _removeDead = true;
    private static boolean _copyProp = true;
-   private static boolean _foldConstants = true;
+   private static boolean _preserveConst = false;
 
    private static void parseParameters(String [] args)
    {
@@ -57,6 +58,9 @@ public class Mini
          }
          else if (args[i].equals(NOCOPY)) {
             _copyProp = false;
+         }
+         else if (args[i].equals(PRESERVECONST)) {
+            _preserveConst = true;
          }
          else if (args[i].charAt(0) == '-')
          {
@@ -103,7 +107,7 @@ public class Mini
          nodes.setTokenStream(tokens);
          TypeCheck tparser = new TypeCheck(nodes);
 
-         tparser.verify(_outputIloc, _inputFile, _removeDead, _copyProp);
+         tparser.verify(_outputIloc, _inputFile, _removeDead, _copyProp, _preserveConst);
       }
       catch (org.antlr.runtime.RecognitionException e)
       {

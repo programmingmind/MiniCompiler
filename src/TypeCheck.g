@@ -39,6 +39,8 @@ options
 
    private boolean inAssign;
    private int conditionalDepth;
+
+   private boolean preserveConstants;
 }
 
 error0 [String text]
@@ -49,8 +51,8 @@ error [int line, String text]
    : { if (true) throw new RuntimeException($line + " : " + $text); }
    ;
 
-verify [boolean outputIloc, String fileName, boolean removeDeadCode, boolean performCopyPropogation]
-   : program [outputIloc, fileName, removeDeadCode, performCopyPropogation]
+verify [boolean outputIloc, String fileName, boolean removeDeadCode, boolean performCopyPropogation, boolean preserveConstants]
+   : program [outputIloc, fileName, removeDeadCode, performCopyPropogation, preserveConstants]
       {
          System.out.print("Type checking passed");
          if (outputIloc)
@@ -63,9 +65,11 @@ verify [boolean outputIloc, String fileName, boolean removeDeadCode, boolean per
    | { System.out.println("not a valid AST"); }
    ;
 
-program [boolean outputIloc, String fileName, boolean removeDeadCode, boolean performCopyPropogation]
+program [boolean outputIloc, String fileName, boolean removeDeadCode, boolean performCopyPropogation, boolean preserveConstants]
    @init
    {
+      this.preserveConstants = preserveConstants;
+
       stables = new Stack<SymbolTable>();
       returns = new Stack<Type>();
       SymbolTable stable = new SymbolTable();
@@ -799,9 +803,36 @@ factor returns [Type t = null, Register reg = null, Integer imm = null]
          $t = i.t;
          current.peek().addInstruction(InstructionFactory.loadRet($reg = func.getNextRegister()));
       }
-   | INTEGER { $imm = Integer.parseInt($INTEGER.text); $t=Type.intType(); }
-   | TRUE { $imm = 1; $t=Type.boolType(); }
-   | FALSE { $imm = 0; $t=Type.boolType(); }
+   | INTEGER
+      {
+         $t=Type.intType();
+
+         if (preserveConstants) {
+            current.peek().addInstruction(InstructionFactory.loadi(Integer.parseInt($INTEGER.text), $reg = func.getNextRegister()));
+         } else {
+            $imm = Integer.parseInt($INTEGER.text);
+         }
+      }
+   | TRUE
+      {
+         $t = Type.boolType();
+
+         if (preserveConstants) {
+            current.peek().addInstruction(InstructionFactory.loadi(1, $reg = func.getNextRegister()));
+         } else {
+            $imm = 1;
+         }
+      }
+   | FALSE
+      {
+         $t = Type.boolType();
+
+         if (preserveConstants) {
+            current.peek().addInstruction(InstructionFactory.loadi(0, $reg = func.getNextRegister()));
+         } else {
+            $imm = 0;
+         }
+      }
    | ^(NEW id=ID)
       {
          $t=Type.structType($id.text);
@@ -810,7 +841,12 @@ factor returns [Type t = null, Register reg = null, Integer imm = null]
    | NULL
       {
          $t=Type.structType("null");
-         $imm = 0; 
+         
+         if (preserveConstants) {
+            current.peek().addInstruction(InstructionFactory.loadi(0, $reg = func.getNextRegister()));
+         } else {
+            $imm = 0;
+         }
       }
    ;
 
