@@ -15,6 +15,7 @@ public class Function {
    private Type returnType;
    private SymbolTable vars;
    private HashMap<String, Register> registers;
+   private HashMap<String, Long> immediates;
    private Block entry, exit;
 
    private int currentRegister;
@@ -32,6 +33,7 @@ public class Function {
 
       currentRegister = 0;
       registers = new HashMap<String, Register>();
+      immediates = new HashMap<String, Long>();
       usedRegs = new ArrayList<Register>();
 
       for (String var : vars.getLocals())
@@ -106,8 +108,18 @@ public class Function {
       return registers.get(varName);
    }
 
+   public Long getVarImmediate(String varName) {
+      return immediates.get(varName);
+      }
+
    public void putVarRegister(String varName, Register reg) {
       registers.put(varName, reg);
+      immediates.remove(varName);
+   }
+
+   public void putVarImmediate(String varName, Long imm) {
+      immediates.put(varName, imm);
+      registers.remove(varName);
    }
 
    public void allocateRegisters() {
@@ -323,7 +335,7 @@ public class Function {
             for (Instruction inst : b.getInstructions()) {
                if (inst.toIloc().startsWith("storeai"))
                   continue;
-               
+
                if (! usedBeforeNextSet(inst)) {
                   change = true;
                   toRemove = inst;

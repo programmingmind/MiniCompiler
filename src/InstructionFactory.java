@@ -108,7 +108,7 @@ public class InstructionFactory {
       };                       
    }
 
-   private static Instruction mul(final Integer imm, Register left, Register right, Register result) {
+   private static Instruction mul(final Long imm, Register left, Register right, Register result) {
       String iloc = "mult r" + left.getILOC() + ", " + (imm == null ? ("r" + right.getILOC()) : imm) + ", r" + result.getILOC();
       if (imm == null) {
          return new Instruction(iloc,
@@ -183,7 +183,7 @@ public class InstructionFactory {
       };
    }
 
-   public static Instruction arithmetic(final int type, final Integer imm, Register left, Register right, Register result) {
+   public static Instruction arithmetic(final int type, final Long imm, Register left, Register right, Register result) {
       String op = null;
       switch (type) {
          case TypeCheck.PLUS:
@@ -310,7 +310,7 @@ public class InstructionFactory {
       }
    }
 
-   public static Instruction xori(Register reg, final int imm, Register result) {
+   public static Instruction xori(Register reg, final long imm, Register result) {
       if (reg.getILOC() == result.getILOC()) {
          return new Instruction("xori r" + reg.getILOC() + ", " + imm + ", r" + result.getILOC(),
                                  new Register[] {reg},
@@ -346,7 +346,7 @@ public class InstructionFactory {
       };
    }
 
-   public static Instruction compi(Register reg, final int imm) {
+   public static Instruction compi(Register reg, final long imm) {
       return new Instruction("compi r" + reg.getILOC() + ", " + imm,
                               new Register[] {reg},
                               null) {
@@ -384,7 +384,7 @@ public class InstructionFactory {
       };
    }
 
-   public static Instruction loadi(final int immediate, Register result) {
+   public static Instruction loadi(final long immediate, Register result) {
       return new Instruction("loadi " + immediate + ", r" + result.getILOC(),
                               new Register[] {},
                               result) {
@@ -396,7 +396,7 @@ public class InstructionFactory {
       };
    }
 
-   public static Instruction loadai(Register reg, final int imm, Register result) {
+   public static Instruction loadai(Register reg, final long imm, Register result) {
       return new Instruction("loadai r" + reg.getILOC() + ", " + imm + ", r" + result.getILOC(),
                               new Register[] {reg},
                               result) {
@@ -495,7 +495,7 @@ public class InstructionFactory {
       };
    }
 
-   public static Instruction storeai(Register reg, Register result, final int imm) {
+   public static Instruction storeai(Register reg, Register result, final long imm) {
       return new Instruction("storeai r" + reg.getILOC() + ", r" + result.getILOC() + ", " + imm,
                               new Register[] {reg},
                               result) {

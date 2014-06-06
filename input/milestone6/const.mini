@@ -10,5 +10,5 @@ fun main() int
    return 0;
 }
 
-assignment in (actual) conditional shouldn't be able to be a constant
-assignment in loop shouldnt be constant
+# assignment in (actual) conditional shouldn't be able to be a constant
+# assignment in loop shouldnt be constant
