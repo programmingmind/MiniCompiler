@@ -1,0 +1,19 @@
+fun main() int
+{
+   int a, b, c, d, e;
+   a = 76 * 762 - 632 / 4;
+   b = 66423 - 7352 + 765 * 532;
+   c = a*b + 765 * a + 987;
+   d = b*c - a*c + a*b;
+   read e;
+   if (e < d)
+   {
+      e = a*b*c - b*c*d + d*d*d - 765 * a * c - 600/4;
+   }
+   else
+   {
+      e = 54;
+   }
+   print e endl;
+   return 0;
+}
