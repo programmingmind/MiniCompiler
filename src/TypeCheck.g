@@ -302,7 +302,7 @@ statement returns [Type t = null]
          if (l.wasStruct)
             current.peek().removeUnnecessaryLVal();
 
-         if (! l.wasStruct && a.imm != null && conditionalDepth == 0 && func.getLoopDepth() == 0) {
+         if (! l.wasStruct && a.imm != null && conditionalDepth == 0) {
             func.putVarImmediate(l.name, a.imm);
          } else {
             Register reg = store_reg(l).reg;
