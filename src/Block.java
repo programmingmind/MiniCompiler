@@ -100,6 +100,9 @@ public class Block {
       if (inst.isMoveable() && inst.toIloc().startsWith("loadinargument")) {
          pre.addBeforeCalls(inst);
       } else if (!hasLeft) {
+         if (Functions.isDefined(function) && Functions.get(function).getLoopDepth() > 0)
+            inst.setInLoop();
+
          instructions.add(inst);
          hasLeft = inst.isJump();
       } else {

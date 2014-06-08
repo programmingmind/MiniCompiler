@@ -287,7 +287,7 @@ public class Function {
 
       for (Block b : blocks)
          for (Instruction i : b.getInstructions())
-            if (i.toIloc().startsWith("mov "))
+            if (!i.isInLoop() && i.toIloc().startsWith("mov "))
                replaceIfPossible(i);
    }
 

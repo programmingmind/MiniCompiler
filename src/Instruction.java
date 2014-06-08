@@ -7,12 +7,14 @@ public abstract class Instruction {
    private Types type;
    protected Register[] sources;
    protected Register target;
+   private boolean inLoop;
 
    public Instruction(String text, Register[] sources, Register target, Types type) {
       this.text = text;
       this.sources = sources;
       this.target = target;
       this.type = type;
+      inLoop = false;
    }
 
    public Instruction(String text, Register[] sources, Register target) {
@@ -68,6 +70,14 @@ public abstract class Instruction {
 
    public boolean isCall() {
       return type == Types.CALL;
+   }
+
+   public void setInLoop() {
+      inLoop = true;
+   }
+
+   public boolean isInLoop() {
+      return inLoop;
    }
 
    public boolean usesReg(Register reg) {
