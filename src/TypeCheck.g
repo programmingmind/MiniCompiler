@@ -338,6 +338,11 @@ statement returns [Type t = null]
             error0("can only read in ints");
 
          Register reg = store_reg(l).reg;
+         if (reg == null) {
+            reg = func.getNextRegister();
+            func.putVarRegister(l.name, reg);
+         }
+
          current.peek().addInstruction(InstructionFactory.read(reg));
          store_val(reg, l);
       }
