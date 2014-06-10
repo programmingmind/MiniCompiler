@@ -249,6 +249,9 @@ function [boolean removeDeadCode, boolean performCopyPropogation]
          if (removeDeadCode)
             func.removeUselessInstructions();
 
+         if (performCopyPropogation && removeDeadCode)
+            func.performTargetPropogation();
+
          func.allocateRegisters();
 
          String[] code = func.getCode();

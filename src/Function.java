@@ -379,13 +379,34 @@ public class Function {
 
       for (Block b : blocks)
          if (b.getDepth() == 0)
-         for (Instruction i : b.getInstructions())
-            if (i.toIloc().startsWith("mov "))
-               replaceIfPossible(i);
+            for (Instruction i : b.getInstructions())
+               if (i.toIloc().startsWith("mov "))
+                  replaceIfPossible(i);
    }
 
-   private boolean usedBeforeNextSet(Instruction i) {
-      Register target = i.getTarget();
+   public void performTargetPropogation() {
+      List<Block> blocks = sortBlocks();
+
+      for (Block b : blocks) {
+         List<Instruction> insts = b.getInstructions();
+         List<Instruction> toRemove = new ArrayList<Instruction>();
+
+         for (int i = 1; i < insts.size(); i++) {
+            if (insts.get(i).toIloc().startsWith("mov ") &&
+                insts.get(i).getSources()[0] == insts.get(i-1).getTarget()
+                && !usedAfter(insts.get(i - 1).getTarget(), insts.get(i))) {
+
+               insts.get(i - 1).replace(insts.get(i - 1).getTarget(), insts.get(i).getTarget());
+               toRemove.add(insts.get(i));
+            }
+         }
+
+         for (Instruction i : toRemove)
+            b.removeInstruction(i);
+      }
+   }
+
+   private boolean usedAfter(Register target, Instruction i) {
       if (target == null)
          return true;
 
@@ -413,6 +434,10 @@ public class Function {
       }
 
       return false;
+   }
+
+   private boolean usedBeforeNextSet(Instruction i) {
+      return usedAfter(i.getTarget(), i);
    }
 
    public void removeUselessInstructions() {
