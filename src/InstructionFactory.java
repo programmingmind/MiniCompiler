@@ -701,7 +701,7 @@ public class InstructionFactory {
                               Instruction.Types.CALL) {
          protected String[] getBareAsm() {
             return new String[] {
-               "leaq 8(%rsp), %r" + target.getASM(),
+               "leaq -8(%rbp), %r" + target.getASM(),
                "movq $" + InstructionFactory.readName + ", %rdi",
                "movq %r" + target.getASM() + ", %rsi",
                "movq $0, %rax",
@@ -710,7 +710,7 @@ public class InstructionFactory {
                "call scanf",
                "pop %r11",
                "pop %r10",
-               "mov 8(%rsp), %r" + target.getASM()
+               "mov -8(%rbp), %r" + target.getASM()
             };
          }
       };
