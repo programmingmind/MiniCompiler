@@ -223,6 +223,12 @@ function [boolean removeDeadCode, boolean performCopyPropogation]
             returns.push(rt.t); 
             current.push(func.getEntry());
             next.push(func.getExit());
+
+            for (String arg : func.getParamNames()) {
+               Register reg;
+               func.putVarRegister(arg, reg = func.getNextRegister());
+               current.peek().addInstruction(InstructionFactory.loadArg(arg, func.getParamIndex(arg), reg, false));
+            }
          }
          sl=statement_list
       )

@@ -130,6 +130,10 @@ public class Function {
       return vars.getParamName(num);
    }
 
+   public List<String> getParamNames() {
+      return vars.getParamNames();
+   }
+
    public int getParamIndex(String name) {
       int ndx = 0;
       for (String s : vars.getParamNames()) {
