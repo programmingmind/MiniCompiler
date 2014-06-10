@@ -497,11 +497,11 @@ public class InstructionFactory {
 
    public static Instruction storeai(Register reg, Register result, final long imm) {
       return new Instruction("storeai r" + reg.getILOC() + ", r" + result.getILOC() + ", " + imm,
-                              new Register[] {reg},
-                              result) {
+                              new Register[] {reg, result},
+                              null) {
          public String[] toAssembly() {
             return new String[] {
-               "movq %r" + sources[0].getASM() + ", " + imm + "(%r" + target.getASM() + ")"
+               "movq %r" + sources[0].getASM() + ", " + imm + "(%r" + sources[1].getASM() + ")"
             };
          }
       };
