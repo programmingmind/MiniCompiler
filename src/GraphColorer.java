@@ -55,7 +55,7 @@ public class GraphColorer {
    public void color() {
       for (Node node : graph) {
          if (! node.getReg().isASMSet()) {
-            ArrayList<String> regs = new ArrayList<String>(Arrays.asList(InstructionFactory.registers));
+            ArrayList<String> regs = Mini.shouldSpillAll() ? new ArrayList<String>() : new ArrayList<String>(Arrays.asList(InstructionFactory.registers));
             for (Node link : node.getLinks())
                if (link.getReg().isASMSet() && !link.getReg().doesSpill())
                   regs.remove(link.getReg().getASM());

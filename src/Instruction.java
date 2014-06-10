@@ -89,10 +89,14 @@ public abstract class Instruction {
             commands.addAll(sources[0].getRegister(InstructionFactory.TEMP_REG));
 
          if (sources.length == 2 && sources[1] != sources[0] && sources[1] != target && sources[1].doesSpill()) {
-            if (sources[0].doesSpill()) {
-               throw new RuntimeException("Currently only 1 temp reg");
+            if (Mini.shouldSpillAll()) {
+               commands.addAll(sources[1].getRegister(InstructionFactory.registers[0]));
+            } else {
+               if (sources[0].doesSpill()) {
+                  throw new RuntimeException("Currently only 1 temp reg");
+               }
+               commands.addAll(sources[1].getRegister(InstructionFactory.TEMP_REG));
             }
-            commands.addAll(sources[1].getRegister(InstructionFactory.TEMP_REG));
          }
       }
 

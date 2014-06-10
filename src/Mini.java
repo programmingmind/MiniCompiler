@@ -29,6 +29,10 @@ public class Mini
       }
    }
 
+   public static boolean shouldSpillAll() {
+      return _spillAll;
+   }
+
    private static final String DISPLAYAST = "-displayAST";
    private static final String OUTPUTILOC = "-dumpIL";
    private static final String KEEPDEADCODE = "-keepDead";
@@ -63,6 +67,9 @@ public class Mini
          }
          else if (args[i].equals(PRESERVECONST)) {
             _preserveConst = true;
+         }
+         else if (args[i].equals(SPILLALL)) {
+            _spillAll = true;
          }
          else if (args[i].charAt(0) == '-')
          {
