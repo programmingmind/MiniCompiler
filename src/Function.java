@@ -12,11 +12,60 @@ import java.util.Set;
 import java.util.Stack;
 
 public class Function {
+   private class VariableList {
+      private VariableList prev;
+      private HashMap<String, Register> registers;
+      private HashMap<String, Long> immediates;
+
+      public VariableList(VariableList prev) {
+         this.prev = prev;
+         this.registers = new HashMap<String, Register>();
+         this.immediates = new HashMap<String, Long>();
+      }
+
+      public VariableList getPrev() {
+         return prev;
+      }
+
+      public Register getVarRegister(String varName) {
+         if (registers.containsKey(varName))
+            return registers.get(varName);
+         else if (prev != null)
+            return prev.getVarRegister(varName);
+         else
+            return null;
+      }
+
+      public Long getVarImmediate(String varName) {
+         if (immediates.containsKey(varName))
+            return immediates.get(varName);
+         else if (prev != null)
+            return prev.getVarImmediate(varName);
+         else
+            return null;
+      }
+
+      public void putVarRegister(String varName, Register reg) {
+         registers.put(varName, reg);
+         immediates.remove(varName);
+      }
+
+      public Set<String> getImmediateVars() {
+         return new HashSet<String>(immediates.keySet());
+      }
+
+      public void putVarImmediate(String varName, Long imm) {
+         immediates.put(varName, imm);
+         registers.remove(varName);
+      }
+   }
+
    private String name;
    private Type returnType;
    private SymbolTable vars;
-   private HashMap<String, Register> registers;
-   private HashMap<String, Long> immediates;
+
+   private VariableList variables; 
+   
    private Block entry, exit, preLoop;
 
    private int currentRegister;
@@ -33,8 +82,9 @@ public class Function {
       this.exit = new Block(name, "exit");
 
       currentRegister = 0;
-      registers = new HashMap<String, Register>();
-      immediates = new HashMap<String, Long>();
+      
+      this.variables = new VariableList(null);
+
       usedRegs = new ArrayList<Register>();
 
       for (String var : vars.getLocals())
@@ -97,10 +147,12 @@ public class Function {
    }
 
    public void enterLoop() {
+      variables = new VariableList(variables);
       ++loopDepth;
    }
 
    public void exitLoop() {
+      variables = variables.getPrev();
       --loopDepth;
    }
 
@@ -109,10 +161,12 @@ public class Function {
    }
 
    public void enterConditional() {
+      variables = new VariableList(variables);
       ++conditionalDepth;
    }
 
    public void exitConditional() {
+      variables = variables.getPrev();
       --conditionalDepth;
    }
 
@@ -121,25 +175,23 @@ public class Function {
    }
 
    public Register getVarRegister(String varName) {
-      return registers.get(varName);
+      return variables.getVarRegister(varName);
    }
 
    public Long getVarImmediate(String varName) {
-      return immediates.get(varName);
+      return variables.getVarImmediate(varName);
    }
 
    public void putVarRegister(String varName, Register reg) {
-      registers.put(varName, reg);
-      immediates.remove(varName);
+      variables.putVarRegister(varName, reg);
    }
 
    public Set<String> getImmediateVars() {
-      return new HashSet<String>(immediates.keySet());
+      return variables.getImmediateVars();
    }
 
    public void putVarImmediate(String varName, Long imm) {
-      immediates.put(varName, imm);
-      registers.remove(varName);
+      variables.putVarImmediate(varName, imm);
    }
 
    private void spillAll() {
@@ -322,8 +374,9 @@ public class Function {
       List<Block> blocks = sortBlocks();
 
       for (Block b : blocks)
+         if (b.getDepth() == 0)
          for (Instruction i : b.getInstructions())
-            if (!i.isInLoop() && i.toIloc().startsWith("mov "))
+            if (i.toIloc().startsWith("mov "))
                replaceIfPossible(i);
    }
 

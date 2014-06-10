@@ -354,9 +354,20 @@ statement returns [Type t = null]
          token=IF
          {
             next.push(new Block(func.getName()));
+         }
+         a=expression
+         {
             func.enterConditional();
          }
-         a=expression b=block b2=block?
+         b=block
+         {
+            func.exitConditional();
+            func.enterConditional();
+         }
+         b2=block?
+         {
+            func.exitConditional();
+         }
       )
       {
          if (! a.t.isBool())
@@ -389,8 +400,6 @@ statement returns [Type t = null]
          }
          current.pop();
          current.push(next.pop());
-
-         func.exitConditional();
       }
    | ^(
          token=WHILE

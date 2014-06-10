@@ -23,6 +23,7 @@ public class Block {
    private boolean hasLeft;
 
    private String function;
+   private int depth;
 
    private void init(String func, String which) {
       this.label = func + "_" + which;
@@ -39,9 +40,14 @@ public class Block {
       hasLeft = false;
 
       this.function = func;
+      this.depth = 0;
 
-      if (Functions.isDefined(func) && Functions.get(func).getLoopDepth() == 0)
-         Functions.get(func).setPreLoop(this);
+      if (Functions.isDefined(func)) {
+         if (Functions.get(func).getLoopDepth() == 0)
+            Functions.get(func).setPreLoop(this);
+
+         this.depth = Functions.get(func).getLoopDepth() + Functions.get(func).getConditionalDepth();
+      }
    }
 
    public Block(String func, String which) {
@@ -67,6 +73,10 @@ public class Block {
       return Collections.unmodifiableList(instructions);
    }
 
+   public int getDepth() {
+      return depth;
+   }
+
    public void removeInstruction(Instruction inst) {
       instructions.remove(inst);
    }
@@ -89,23 +99,8 @@ public class Block {
       return endBranchSuccessors.contains(b);
    }
 
-   private void addBeforeCalls(Instruction inst) {
-      int pos;
-      for (pos = 0; pos < instructions.size(); pos++)
-         if (instructions.get(pos).isCall() || instructions.get(pos).isJump())
-            break;
-
-      instructions.add(pos, inst);
-   }
-
    public void addInstruction(Instruction inst) {
-      Block pre = (Functions.isDefined(function) && (Functions.get(function).getLoopDepth() > 0 || Functions.get(function).getConditionalDepth() > 0)) ? Functions.get(function).getEntry() : this;
-      if (inst.toIloc().startsWith("loadinargument")) {
-         pre.addBeforeCalls(inst);
-      } else if (!hasLeft) {
-         if (Functions.isDefined(function) && Functions.get(function).getLoopDepth() > 0)
-            inst.setInLoop();
-
+      if (!hasLeft) {
          instructions.add(inst);
          hasLeft = inst.isJump();
       } else {
