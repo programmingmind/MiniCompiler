@@ -100,8 +100,8 @@ public abstract class Instruction {
          }
       }
 
-      if (target != null) {
-         commands.addAll(target.getRegister(InstructionFactory.TEMP_REG));
+      if (target != null && target.doesSpill()) {
+         target.setASM(InstructionFactory.TEMP_REG);
       }
 
       return commands;

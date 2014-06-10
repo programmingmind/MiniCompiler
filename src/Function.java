@@ -210,15 +210,11 @@ public class Function {
    }
 
    public void allocateRegisters() {
-      boolean spillAll = false;
-      if (usedRegs.size() < InstructionFactory.registers.length) {
+      if (usedRegs.size() < InstructionFactory.registers.length && !Mini.shouldSpillAll()) {
          for (int i = 0; i < usedRegs.size(); i++)
             usedRegs.get(i).setASM(InstructionFactory.registers[i]);
       } else {
-         if (spillAll)
-            spillAll();
-
-         computeLiveRanges(spillAll);
+         computeLiveRanges();
          for (Block b : sortBlocks())
             b.allocateRegisters();
       }
@@ -487,9 +483,9 @@ public class Function {
       }
    }
 
-   private void computeLiveRanges(boolean spillAll) {
+   private void computeLiveRanges() {
       List<Block> blocks = sortBlocks();
-      boolean change = !spillAll;
+      boolean change = ! Mini.shouldSpillAll();
 
       while (change) {
          change = false;
