@@ -18,6 +18,7 @@ options
    import java.util.HashMap;
    import java.util.Vector;
    import java.util.Iterator;
+   import java.util.Set;
 }
 
 @members
@@ -38,7 +39,6 @@ options
    private BufferedWriter asmBW = null;
 
    private boolean inAssign;
-   private int conditionalDepth;
 
    private boolean preserveConstants;
 }
@@ -213,7 +213,6 @@ function [boolean removeDeadCode, boolean performCopyPropogation]
       next = new Stack<Block>();
       current = new Stack<Block>();
       inAssign = false;
-      conditionalDepth = 0;
    }
    : ^(
          FUN id=ID parameters[vars] ^(RETTYPE rt=return_type) declarations[vars]
@@ -302,7 +301,7 @@ statement returns [Type t = null]
          if (l.wasStruct)
             current.peek().removeUnnecessaryLVal();
 
-         if (! l.wasStruct && !l.global && a.imm != null && conditionalDepth == 0 && func.getLoopDepth() == 0) {
+         if (! l.wasStruct && !l.global && a.imm != null && func.getConditionalDepth() == 0 && func.getLoopDepth() == 0) {
             func.putVarImmediate(l.name, a.imm);
          } else {
             Register reg = store_reg(l).reg;
@@ -355,7 +354,7 @@ statement returns [Type t = null]
          token=IF
          {
             next.push(new Block(func.getName()));
-            conditionalDepth++;
+            func.enterConditional();
          }
          a=expression b=block b2=block?
       )
@@ -391,11 +390,17 @@ statement returns [Type t = null]
          current.pop();
          current.push(next.pop());
 
-         conditionalDepth--;
+         func.exitConditional();
       }
    | ^(
          token=WHILE
          {
+            Set<String> imms = func.getImmediateVars();
+            for (String name : imms) {
+               Register nextR = func.getNextRegister();
+               current.peek().addInstruction(InstructionFactory.loadi(func.getVarImmediate(name), nextR));
+               func.putVarRegister(name, nextR);
+            }
             next.push(new Block(func.getName()));
             func.enterLoop();
          }
@@ -493,7 +498,7 @@ ret returns [Type t = null]
 
          if (tmp.imm != null)
             current.peek().addInstruction(InstructionFactory.loadi(tmp.imm, tmp.reg = func.getNextRegister()));
-         current.peek().addInstruction(InstructionFactory.storeRet(tmp.reg, conditionalDepth));
+         current.peek().addInstruction(InstructionFactory.storeRet(tmp.reg));
       }
    | RETURN
       {

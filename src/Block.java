@@ -39,6 +39,9 @@ public class Block {
       hasLeft = false;
 
       this.function = func;
+
+      if (Functions.isDefined(func) && Functions.get(func).getLoopDepth() == 0)
+         Functions.get(func).setPreLoop(this);
    }
 
    public Block(String func, String which) {
@@ -89,15 +92,15 @@ public class Block {
    private void addBeforeCalls(Instruction inst) {
       int pos;
       for (pos = 0; pos < instructions.size(); pos++)
-         if (instructions.get(pos).isCall())
+         if (instructions.get(pos).isCall() || instructions.get(pos).isJump())
             break;
 
       instructions.add(pos, inst);
    }
 
    public void addInstruction(Instruction inst) {
-      Block pre = (Functions.isDefined(function) && Functions.get(function).getLoopDepth() > 0) ? Functions.get(function).getEntry() : this;
-      if (inst.isMoveable() && inst.toIloc().startsWith("loadinargument")) {
+      Block pre = (Functions.isDefined(function) && (Functions.get(function).getLoopDepth() > 0 || Functions.get(function).getConditionalDepth() > 0)) ? Functions.get(function).getEntry() : this;
+      if (inst.toIloc().startsWith("loadinargument")) {
          pre.addBeforeCalls(inst);
       } else if (!hasLeft) {
          if (Functions.isDefined(function) && Functions.get(function).getLoopDepth() > 0)
@@ -246,11 +249,11 @@ public class Block {
 
       for (Register register : registers) {
          if (start.get(register) == null) {
-            System.err.println("WARNING: could not compute start of live range for r" + register.getILOC());
+            System.err.println("WARNING (" + label + "): could not compute start of live range for r" + register.getILOC());
             start.put(register, -1);
          }
          if (end.get(register) == null) {
-            System.err.println("WARNING: could not compute end of live range for r" + register.getILOC());
+            System.err.println("WARNING (" + label + "): could not compute end of live range for r" + register.getILOC());
             end.put(register, instructions.size());
          }
 

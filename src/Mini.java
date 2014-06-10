@@ -34,6 +34,7 @@ public class Mini
    private static final String KEEPDEADCODE = "-keepDead";
    private static final String NOCOPY = "-noCopyProp";
    private static final String PRESERVECONST = "-preserveConst";
+   private static final String SPILLALL = "-spillAll";
 
    private static String _inputFile = null;
    private static boolean _displayAST = false;
@@ -41,6 +42,7 @@ public class Mini
    private static boolean _removeDead = true;
    private static boolean _copyProp = true;
    private static boolean _preserveConst = false;
+   private static boolean _spillAll = false;
 
    private static void parseParameters(String [] args)
    {

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 
 public class Function {
@@ -16,12 +17,12 @@ public class Function {
    private SymbolTable vars;
    private HashMap<String, Register> registers;
    private HashMap<String, Long> immediates;
-   private Block entry, exit;
+   private Block entry, exit, preLoop;
 
    private int currentRegister;
    private ArrayList<Register> usedRegs;
 
-   private int loopDepth;
+   private int loopDepth, conditionalDepth;
 
    public Function(String name, Type returnType, SymbolTable vars) {
       this.name = name;
@@ -40,6 +41,9 @@ public class Function {
          putVarRegister(var, getNextRegister());
 
       loopDepth = 0;
+      conditionalDepth = 0;
+
+      preLoop = entry;
    }
 
    public String getName() {
@@ -104,17 +108,33 @@ public class Function {
       return loopDepth;
    }
 
+   public void enterConditional() {
+      ++conditionalDepth;
+   }
+
+   public void exitConditional() {
+      --conditionalDepth;
+   }
+
+   public int getConditionalDepth() {
+      return conditionalDepth;
+   }
+
    public Register getVarRegister(String varName) {
       return registers.get(varName);
    }
 
    public Long getVarImmediate(String varName) {
       return immediates.get(varName);
-      }
+   }
 
    public void putVarRegister(String varName, Register reg) {
       registers.put(varName, reg);
       immediates.remove(varName);
+   }
+
+   public Set<String> getImmediateVars() {
+      return new HashSet<String>(immediates.keySet());
    }
 
    public void putVarImmediate(String varName, Long imm) {
@@ -122,15 +142,31 @@ public class Function {
       registers.remove(varName);
    }
 
+   private void spillAll() {
+
+   }
+
    public void allocateRegisters() {
+      boolean spillAll = false;
       if (usedRegs.size() < InstructionFactory.registers.length) {
          for (int i = 0; i < usedRegs.size(); i++)
             usedRegs.get(i).setASM(InstructionFactory.registers[i]);
       } else {
-         computeLiveRanges();
+         if (spillAll)
+            spillAll();
+
+         computeLiveRanges(spillAll);
          for (Block b : sortBlocks())
             b.allocateRegisters();
       }
+   }
+
+   public void setPreLoop(Block b) {
+      preLoop = b;
+   }
+
+   public void addBeforeLoop(Instruction inst) {
+      preLoop.addInstruction(inst);
    }
 
    public void saveDot() {
@@ -362,9 +398,9 @@ public class Function {
       }
    }
 
-   private void computeLiveRanges() {
+   private void computeLiveRanges(boolean spillAll) {
       List<Block> blocks = sortBlocks();
-      boolean change = true;
+      boolean change = !spillAll;
 
       while (change) {
          change = false;
