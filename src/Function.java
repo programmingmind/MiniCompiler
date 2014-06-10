@@ -71,6 +71,8 @@ public class Function {
    private int currentRegister;
    private ArrayList<Register> usedRegs;
 
+   private int spillPos;
+
    private int loopDepth, conditionalDepth;
 
    public Function(String name, Type returnType, SymbolTable vars) {
@@ -82,6 +84,7 @@ public class Function {
       this.exit = new Block(name, "exit");
 
       currentRegister = 0;
+      this.spillPos = 1;
       
       this.variables = new VariableList(null);
 
@@ -108,9 +111,13 @@ public class Function {
       return exit;
    }
 
+   public int nextSpill() {
+      return ++spillPos;
+   }
+
    public int getStackSize() {
-      // make room for all possible variables, and 1 extra spot for scanf
-      return 8 * (vars.getParamNames().size() + vars.getLocals().size() + 1);
+      // make room for all spilled registers, and 1 extra spot for scanf
+      return 8 * (spillPos + 1);
    }
 
    public int getOffset(String var) {
@@ -293,7 +300,7 @@ public class Function {
       StringWriter asm = new StringWriter();
       String[] code;
 
-      String[] prefix = InstructionFactory.functionStart(name).toAssembly();
+      List<String> prefix = InstructionFactory.functionStart(name).toAssembly();
 
       for (Block tmp : sortBlocks()) {
          code = tmp == entry ? tmp.getCode(prefix) : tmp.getCode();

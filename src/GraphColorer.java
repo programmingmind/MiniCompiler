@@ -32,8 +32,11 @@ public class GraphColorer {
    }
 
    private Set<Node> graph;
+   private Function function;
 
-   public GraphColorer(Collection<Register> registers) {
+   public GraphColorer(Collection<Register> registers, Function function) {
+      this.function = function;
+
       graph = new HashSet<Node>();
       
       for (Register reg : registers)
@@ -54,14 +57,13 @@ public class GraphColorer {
          if (! node.getReg().isASMSet()) {
             ArrayList<String> regs = new ArrayList<String>(Arrays.asList(InstructionFactory.registers));
             for (Node link : node.getLinks())
-               if (link.getReg().isASMSet())
+               if (link.getReg().isASMSet() && !link.getReg().doesSpill())
                   regs.remove(link.getReg().getASM());
 
             if (regs.size() > 0)
                node.getReg().setASM(regs.get(0));
             else {
-               System.err.println("WARNING: need to spill, unimplemented");
-               node.getReg().setASM("SPILL");
+               node.getReg().spill(function.nextSpill());
             }
          }
       }

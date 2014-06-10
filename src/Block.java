@@ -120,10 +120,10 @@ public class Block {
    }
 
    public String[] getCode() {
-      return getCode(new String[] {});
+      return getCode(new ArrayList<String>());
    }
 
-   public String[] getCode(String[] prefix) {
+   public String[] getCode(List<String> prefix) {
       StringWriter iloc = new StringWriter();
       StringWriter asm = new StringWriter();
 
@@ -257,7 +257,7 @@ public class Block {
    }
 
    public void allocateRegisters() {
-      GraphColorer colorer = new GraphColorer(registers);
+      GraphColorer colorer = new GraphColorer(registers, Functions.get(function));
       colorer.color();
    }
 }

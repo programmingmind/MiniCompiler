@@ -1,3 +1,7 @@
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class Instruction {
    public static enum Types {
       NORMAL, IMMOVEABLE, CALL
@@ -77,7 +81,49 @@ public abstract class Instruction {
       return false;
    }
 
-   public abstract String[] toAssembly();
+   private List<String> loadSpilled() {
+      List<String> commands = new ArrayList<String>();
+
+      if (sources.length > 0) {
+         if (sources[0].doesSpill() && sources[0] != null)
+            commands.addAll(sources[0].getRegister(InstructionFactory.TEMP_REG));
+
+         if (sources.length == 2 && sources[1] != sources[0] && sources[1] != target && sources[1].doesSpill()) {
+            if (sources[0].doesSpill()) {
+               throw new RuntimeException("Currently only 1 temp reg");
+            }
+            commands.addAll(sources[1].getRegister(InstructionFactory.TEMP_REG));
+         }
+      }
+
+      if (target != null) {
+         commands.addAll(target.getRegister(InstructionFactory.TEMP_REG));
+      }
+
+      return commands;
+   }
+
+   private List<String> restoreSpilled() {
+      List<String> commands = new ArrayList<String>();
+
+      if (target != null && target.doesSpill())
+         commands.addAll(target.restoreSpill(true));
+
+      for (Register src : sources)
+         if (src.doesSpill())
+            commands.addAll(src.restoreSpill(false));
+
+      return commands;
+   }
+
+   protected abstract String[] getBareAsm();
+
+   public List<String> toAssembly()  {
+      List<String> commands = loadSpilled();
+      commands.addAll(Arrays.asList(getBareAsm()));
+      commands.addAll(restoreSpilled());
+      return commands;
+   }
 
    public String toString() {
       return "iloc: " + text;

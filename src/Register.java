@@ -1,10 +1,15 @@
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class Register {
    private int iloc;
    private String asm;
 
    private boolean canPropogate = true;
+
+   private boolean isSpilled = false;
+   private int spillCount;
 
    private HashMap<Block, int[]> range;
 
@@ -32,7 +37,7 @@ public class Register {
    }
 
    public boolean isASMSet() {
-      return asm != null;
+      return asm != null || isSpilled;
    }
 
    public String getASM() {
@@ -56,5 +61,45 @@ public class Register {
          }
       }
       return false;
+   }
+
+   public void spill(int spillCount) {
+      isSpilled = true;
+      this.spillCount = spillCount;
+   }
+
+   public boolean doesSpill() {
+      return isSpilled;
+   }
+
+   public int getSpillCount() {
+      if (!isSpilled)
+         throw new RuntimeException("Register isn't spilled");
+      return spillCount;
+   }
+
+   public List<String> getRegister(String tmp) {
+      List<String> insts = new ArrayList<String>();
+
+      if (isSpilled) {
+         insts.add("movq " + (-8 * spillCount) + "(%rbp), %r" + tmp);
+         this.asm = tmp;
+      }
+
+      return insts;
+   }
+
+   public List<String> restoreSpill(boolean save) {
+      List<String> insts = new ArrayList<String>();
+
+      if (isSpilled && this.asm != null) {
+         if (save) {
+            insts.add("movq %r" + this.asm + ", " + (-8 * spillCount) + "(%rbp)");
+         }
+
+         this.asm = null;
+      }
+
+      return insts;
    }
 }

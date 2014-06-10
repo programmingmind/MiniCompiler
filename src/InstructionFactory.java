@@ -1,5 +1,6 @@
 import java.io.StringWriter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class InstructionFactory {
@@ -8,7 +9,7 @@ public class InstructionFactory {
    private static final String[] paramRegs = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 
    public static final String[] registers = {"10", "11", "12", "13", "14", "15"};
-   private static final String TEMP_REG = "rbx";
+   public static final String TEMP_REG = "bx";
 
    public static final int NUM_PARAM_REGS = paramRegs.length;
 
@@ -92,8 +93,12 @@ public class InstructionFactory {
       return new Instruction("",
                               new Register[] {},
                               null) {
-         public String[] toAssembly() {
-            java.util.ArrayList<String> commands = new java.util.ArrayList<String>();
+         protected String[] getBareAsm() {
+            return null;
+         }
+
+         public List<String> toAssembly() {
+            List<String> commands = new ArrayList<String>();
             commands.add("pushq %rbp");
             commands.add("movq %rsp, %rbp");
             if (! name.equals("main")) {
@@ -103,7 +108,7 @@ public class InstructionFactory {
                commands.add("push %r15");
             }
             commands.add("subq $" + stackSize + ", %rsp");
-            return commands.toArray(new String[commands.size()]);
+            return commands;
          }
       };                       
    }
@@ -114,7 +119,7 @@ public class InstructionFactory {
          return new Instruction(iloc,
                                  new Register[] {left, right},
                                  result) {
-            public String[] toAssembly() {
+            protected String[] getBareAsm() {
                if (sources[0].getASM() == target.getASM()) {
                   return new String[] {
                      "imul %r" + sources[1].getASM() + ", %r" + target.getASM()
@@ -135,7 +140,7 @@ public class InstructionFactory {
          return new Instruction(iloc,
                                  new Register[] {left},
                                  result) {
-            public String[] toAssembly() {
+            protected String[] getBareAsm() {
                if (sources[0].getASM() == target.getASM()) {
                   return new String[] {
                      "imul $" + imm + ", %r" + target.getASM()
@@ -156,7 +161,7 @@ public class InstructionFactory {
       return new Instruction(iloc,
                               new Register[] {left, right},
                               result) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             if (target.getASM().equals("ax")) {
                return new String[] {
                   "push %rdx",
@@ -208,7 +213,7 @@ public class InstructionFactory {
             return new Instruction(iloc,
                                     new Register[] {left, right},
                                     result) {
-               public String[] toAssembly() {
+               protected String[] getBareAsm() {
                   return new String[] {
                      asm + "q %r" + sources[1].getASM() + ", %r" + target.getASM()
                   };
@@ -219,7 +224,7 @@ public class InstructionFactory {
                return new Instruction(iloc,
                                        new Register[] {left, right},
                                        result) {
-                  public String[] toAssembly() {
+                  protected String[] getBareAsm() {
                      return new String[] {
                         asm + "q %r" + sources[0].getASM() + ", %r" + target.getASM()
                      };
@@ -229,7 +234,7 @@ public class InstructionFactory {
                return new Instruction(iloc,
                                        new Register[] {left, right},
                                        result) {
-                  public String[] toAssembly() {
+                  protected String[] getBareAsm() {
                      return new String[] {
                         "NOT SUPPORTED YET"
                      };
@@ -240,7 +245,7 @@ public class InstructionFactory {
             return new Instruction(iloc,
                                     new Register[] {left, right},
                                     result) {
-               public String[] toAssembly() {
+               protected String[] getBareAsm() {
                   return new String[] {
                      "mov %r" + sources[0].getASM() + ", %r" + target.getASM(),
                      asm + "q %r" + sources[1].getASM() + ", %r" + target.getASM()
@@ -253,7 +258,7 @@ public class InstructionFactory {
             return new Instruction(iloc,
                                     new Register[] {left},
                                     result) {
-               public String[] toAssembly() {
+               protected String[] getBareAsm() {
                   return new String[] {
                      (type == TypeCheck.PLUS ? "addq" : "subq") + " $" + imm + ", %r" + target.getASM()
                   };
@@ -263,7 +268,7 @@ public class InstructionFactory {
             return new Instruction(iloc,
                                     new Register[] {left},
                                     result) {
-               public String[] toAssembly() {
+               protected String[] getBareAsm() {
                   return new String[] {
                      "mov %r" + sources[0].getASM() + ", %r" + target.getASM(),
                      (type == TypeCheck.PLUS ? "addq" : "subq") + " $" + imm + ", %r" + target.getASM()
@@ -280,7 +285,7 @@ public class InstructionFactory {
          return new Instruction(iloc,
                                  new Register[] {left, right},
                                  result) {
-            public String[] toAssembly() {
+            protected String[] getBareAsm() {
                return new String[] {
                   (type == TypeCheck.AND ? "and" : "or") + " %r" + sources[1].getASM() + ", %r" + target.getASM()
                };
@@ -290,7 +295,7 @@ public class InstructionFactory {
          return new Instruction(iloc,
                                  new Register[] {left, right},
                                  result) {
-            public String[] toAssembly() {
+            protected String[] getBareAsm() {
                return new String[] {
                   (type == TypeCheck.AND ? "and" : "or") + " %r" + sources[0].getASM() + ", %r" + target.getASM()
                };
@@ -300,7 +305,7 @@ public class InstructionFactory {
          return new Instruction(iloc,
                                  new Register[] {left, right},
                                  result) {
-            public String[] toAssembly() {
+            protected String[] getBareAsm() {
                return new String[] {
                   "mov %r" + sources[0].getASM() + ", %r" + target.getASM(),
                   (type == TypeCheck.AND ? "and" : "or") + " %r" + sources[1].getASM() + ", %r" + target.getASM()
@@ -315,7 +320,7 @@ public class InstructionFactory {
          return new Instruction("xori r" + reg.getILOC() + ", " + imm + ", r" + result.getILOC(),
                                  new Register[] {reg},
                                  result) {
-            public String[] toAssembly() {
+            protected String[] getBareAsm() {
                return new String[] {
                   "xor $" + imm + ", %r" + target.getASM()
                };
@@ -325,7 +330,7 @@ public class InstructionFactory {
          return new Instruction("xori r" + reg.getILOC() + ", " + imm + ", r" + result.getILOC(),
                                  new Register[] {reg},
                                  result) {
-            public String[] toAssembly() {
+            protected String[] getBareAsm() {
                return new String[] {
                   "xor $" + imm + ", %r" + target.getASM()
                };
@@ -338,7 +343,7 @@ public class InstructionFactory {
       return new Instruction("comp r" + left.getILOC() + ", r" + right.getILOC(),
                               new Register[] {left, right},
                               null) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "cmp %r" + sources[0].getASM() + ", %r" + sources[1].getASM()
             };
@@ -350,7 +355,7 @@ public class InstructionFactory {
       return new Instruction("compi r" + reg.getILOC() + ", " + imm,
                               new Register[] {reg},
                               null) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "cmp $" + imm + ", %r" + sources[0].getASM()
             };
@@ -363,7 +368,7 @@ public class InstructionFactory {
       return new Instruction("cbr" + getCompOp(type, reverse) + " ccr, " + label1 + ", " + label2,
                               new Register[] {},
                               null) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "j" + asmComp + " " + label1,
                "jmp " + label2
@@ -376,7 +381,7 @@ public class InstructionFactory {
       return new Instruction("jumpi " + label,
                               new Register[] {},
                               null) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "jmp " + label
             };
@@ -388,7 +393,7 @@ public class InstructionFactory {
       return new Instruction("loadi " + immediate + ", r" + result.getILOC(),
                               new Register[] {},
                               result) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "movq $" + immediate + ", %r" + target.getASM()
             };
@@ -400,7 +405,7 @@ public class InstructionFactory {
       return new Instruction("loadai r" + reg.getILOC() + ", " + imm + ", r" + result.getILOC(),
                               new Register[] {reg},
                               result) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "movq " + imm + "(%r" + sources[0].getASM() + "), %r" + target.getASM()
             };
@@ -412,7 +417,7 @@ public class InstructionFactory {
       return new Instruction("loadglobal " + var + ", r" + result.getILOC(),
                               new Register[] {},
                               result) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "movq glob_" + var + "(%rip), %r" + target.getASM()
             };
@@ -427,7 +432,7 @@ public class InstructionFactory {
                                  new Register[] {},
                                  reg,
                                  noMove ? Instruction.Types.IMMOVEABLE : Instruction.Types.NORMAL) {
-            public String[] toAssembly() {
+            protected String[] getBareAsm() {
                return new String[] {
                   "movq %" + regName + ", %r" + target.getASM()
                };
@@ -437,7 +442,7 @@ public class InstructionFactory {
          return new Instruction("loadinargument " + var + ", " + num + ", r" + reg.getILOC(),
                                  new Register[] {},
                                  reg) {
-            public String[] toAssembly() {
+            protected String[] getBareAsm() {
                return new String[] {
                   "NOT SUPPORTED YET"
                };
@@ -450,7 +455,7 @@ public class InstructionFactory {
       return new Instruction("loadret r" + reg.getILOC(),
                               new Register[] {},
                               reg) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "mov %rax, %r" + target.getASM()
             };
@@ -463,7 +468,7 @@ public class InstructionFactory {
       return new Instruction("computeformaladdress " + var + ", " + num + ", r" + reg.getILOC(),
                               new Register[] {},
                               reg) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "leaq -" + offset + "(%rbp), %r" + target.getASM()
             };
@@ -475,7 +480,7 @@ public class InstructionFactory {
       return new Instruction("restoreformal " + var + ", " + num,
                               new Register[] {},
                               null) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "NOT SUPPORTED YET"
             };
@@ -487,7 +492,7 @@ public class InstructionFactory {
       return new Instruction("computeglobaladdress " + var + ", r" + result.getILOC(),
                               new Register[] {},
                               result) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "movq $glob_" + var + ", %r" + target.getASM()
             };
@@ -499,7 +504,7 @@ public class InstructionFactory {
       return new Instruction("storeai r" + reg.getILOC() + ", r" + result.getILOC() + ", " + imm,
                               new Register[] {reg, result},
                               null) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "movq %r" + sources[0].getASM() + ", " + imm + "(%r" + sources[1].getASM() + ")"
             };
@@ -511,7 +516,7 @@ public class InstructionFactory {
       return new Instruction("storeglobal r" + reg.getILOC() + ", " + var,
                               new Register[] {reg},
                               null) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "movq %r" + sources[0].getASM() + ", glob_" + var + "(%rip)"
             };
@@ -525,7 +530,7 @@ public class InstructionFactory {
          return new Instruction("storeinargument r" + reg.getILOC() + ", " + var + ", " + num,
                                  new Register[] {reg},
                                  null) {
-            public String[] toAssembly() {
+            protected String[] getBareAsm() {
                return new String[] {
                   "movq %r" + sources[0].getASM() + ", %" + regName
                };
@@ -536,7 +541,7 @@ public class InstructionFactory {
          return new Instruction("storeinargument r" + reg.getILOC() + ", " + var + ", " + num,
                                  new Register[] {reg},
                                  null) {
-            public String[] toAssembly() {
+            protected String[] getBareAsm() {
                return new String[] {
                   "NOT SUPPORTED YET"
                };
@@ -549,7 +554,7 @@ public class InstructionFactory {
       return new Instruction("storeoutargument r" + reg.getILOC() + ", " + num,
                               new Register[] {reg},
                               null) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "NOT SUPPORTED YET"
             };
@@ -564,7 +569,7 @@ public class InstructionFactory {
       return new Instruction("storeret r" + reg.getILOC(),
                               new Register[] {reg},
                               null) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "mov %r" + sources[0].getASM() + ", %rax"
             };
@@ -577,7 +582,7 @@ public class InstructionFactory {
                               new Register[] {},
                               null,
                               Instruction.Types.CALL) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "push %r10",
                "push %r11",
@@ -599,8 +604,12 @@ public class InstructionFactory {
       return new Instruction("ret",
                               new Register[] {},
                               null) {
-         public String[] toAssembly() {
-            java.util.ArrayList<String> commands = new java.util.ArrayList<String>();
+         protected String[] getBareAsm() {
+            return null;
+         }
+
+         public List<String> toAssembly() {
+            List<String> commands = new ArrayList<String>();
             commands.add("addq $" + stackSize + ", %rsp");
             if (! funcName.equals("main")) {
                commands.add("pop %r15");
@@ -611,7 +620,7 @@ public class InstructionFactory {
             commands.add("leave");
             commands.add("ret");
             commands.add(".size " + funcName + ", .-" + funcName);
-            return commands.toArray(new String[commands.size()]);
+            return commands;
          }
       };
    }
@@ -621,7 +630,7 @@ public class InstructionFactory {
                               new Register[] {},
                               reg,
                               Instruction.Types.CALL) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "movq $" + num + ", %rdi",
                "push %r10",
@@ -640,7 +649,7 @@ public class InstructionFactory {
                               new Register[] {reg},
                               null,
                               Instruction.Types.CALL) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "mov %r" + sources[0].getASM() + ", %rdi",
                "push %r10",
@@ -658,7 +667,7 @@ public class InstructionFactory {
                               new Register[] {reg},
                               null,
                               Instruction.Types.CALL) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "push %rsi",
                "push %rdi",
@@ -690,7 +699,7 @@ public class InstructionFactory {
                               new Register[] {},
                               reg,
                               Instruction.Types.CALL) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "leaq 8(%rsp), %r" + target.getASM(),
                "movq $" + InstructionFactory.readName + ", %rdi",
@@ -711,7 +720,7 @@ public class InstructionFactory {
       return new Instruction("mov r" + r1.getILOC() + ", r" + r2.getILOC(),
                               new Register[] {r1},
                               r2) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "mov %r" + sources[0].getASM() + ", %r" + target.getASM()
             };
@@ -724,7 +733,7 @@ public class InstructionFactory {
       return new Instruction("mov"+ getCompOp(type, reverse) + " ccr, r" + r1.getILOC() + ", r" + r2.getILOC(),
                               new Register[] {r1, r2},
                               r2) {
-         public String[] toAssembly() {
+         protected String[] getBareAsm() {
             return new String[] {
                "cmov" + asmComp + " %r" + sources[0].getASM() + ", %r" + sources[1].getASM()
             };
