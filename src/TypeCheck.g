@@ -829,6 +829,8 @@ dot_load returns [Type t = null, Register reg = null, Long imm = null]
                func.putVarRegister($id.text, $reg = func.getNextRegister());
                current.peek().addInstruction(InstructionFactory.loadArg($id.text, func.getParamIndex($id.text), $reg, inAssign));
             }
+            else if ($t.isStruct())
+               current.peek().addInstruction(InstructionFactory.loadGlobal($id.text, $reg = func.getNextRegister()));
             else
                current.peek().addInstruction(InstructionFactory.globalAddr($id.text, $reg = func.getNextRegister()));
          }
