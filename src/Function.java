@@ -270,6 +270,45 @@ public class Function {
          visited.add(tmp);
 
          List<Block> successors = tmp.getLinks();
+         ArrayList<Block> pre = new ArrayList<Block>();
+         ArrayList<Block> post = new ArrayList<Block>();
+
+         for (Block s : successors) {
+            if (! visited.contains(s)) {
+               if (s.getDepth() > tmp.getDepth()) {
+                  pre.add(s);
+               } else {
+                  post.add(s);
+               }
+            }
+         }
+
+         for (Block b : post)
+            if (! toVisit.contains(b))
+               toVisit.push(b);
+
+         if (pre.size() > 0) {
+            for (Block b : pre)
+               if (! toVisit.contains(b))
+                  toVisit.push(b);
+         }
+      }
+      visited.remove(exit);
+      visited.add(exit);
+
+      return visited;
+   }
+
+   /*private List<Block> sortBlocks() {
+      Stack<Block> toVisit = new Stack<Block>();
+      ArrayList<Block> visited = new ArrayList<Block>();
+
+      toVisit.push(entry);
+      while (! toVisit.empty()) {
+         Block tmp = toVisit.pop();
+         visited.add(tmp);
+
+         List<Block> successors = tmp.getLinks();
          for (int i = successors.size() - 1; i >= 0; i--) {
             Block b = successors.get(i);
             if (toVisit.search(b) == -1 && !visited.contains(b) && b != exit) {
@@ -289,7 +328,7 @@ public class Function {
       visited.add(exit);
 
       return visited;
-   }
+   }*/
 
    public String[] getCode() {
       StringWriter iloc = new StringWriter();
