@@ -84,7 +84,7 @@ public class Function {
       this.exit = new Block(name, "exit");
 
       currentRegister = 0;
-      this.spillPos = 1;
+      this.spillPos = name.equals("main") ? 1 : 5;
       
       this.variables = new VariableList(null);
 
@@ -117,7 +117,7 @@ public class Function {
 
    public int getStackSize() {
       // make room for all spilled registers, and 1 extra spot for scanf
-      return 8 * (spillPos + 1);
+      return 8 * (spillPos + 1 - (name.equals("main") ? 0 : 4));
    }
 
    public int getOffset(String var) {

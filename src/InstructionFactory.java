@@ -100,13 +100,13 @@ public class InstructionFactory {
          public List<String> toAssembly() {
             List<String> commands = new ArrayList<String>();
             commands.add("pushq %rbp");
+            commands.add("movq %rsp, %rbp");
             if (! name.equals("main")) {
                commands.add("push %r12");
                commands.add("push %r13");
                commands.add("push %r14");
                commands.add("push %r15");
             }
-            commands.add("movq %rsp, %rbp");
             commands.add("subq $" + stackSize + ", %rsp");
             return commands;
          }
@@ -608,13 +608,13 @@ public class InstructionFactory {
          public List<String> toAssembly() {
             List<String> commands = new ArrayList<String>();
             commands.add("addq $" + stackSize + ", %rsp");
-            commands.add("leave");
             if (! funcName.equals("main")) {
                commands.add("pop %r15");
                commands.add("pop %r14");
                commands.add("pop %r13");
                commands.add("pop %r12");
             }
+            commands.add("leave");
             commands.add("ret");
             commands.add(".size " + funcName + ", .-" + funcName);
             return commands;
@@ -692,13 +692,14 @@ public class InstructionFactory {
    }
 
    public static Instruction read(Register reg) {
+      final int offset = -8 * (currentFunction.equals("main") ? 1 : 5);
       return new Instruction("read r" + reg.getILOC(),
                               new Register[] {},
                               reg,
                               Instruction.Types.CALL) {
          protected String[] getBareAsm() {
             return new String[] {
-               "leaq -8(%rbp), %r" + target.getASM(),
+               "leaq " + offset + "(%rbp), %r" + target.getASM(),
                "movq $" + InstructionFactory.readName + ", %rdi",
                "movq %r" + target.getASM() + ", %rsi",
                "movq $0, %rax",
@@ -707,7 +708,7 @@ public class InstructionFactory {
                "call scanf",
                "pop %r11",
                "pop %r10",
-               "mov -8(%rbp), %r" + target.getASM()
+               "mov " + offset + "(%rbp), %r" + target.getASM()
             };
          }
       };
