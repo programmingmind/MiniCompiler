@@ -597,7 +597,7 @@ public class InstructionFactory {
 
    public static Instruction realRet() {
       final int stackSize = funcs.get(currentFunction).getStackSize();
-      final String funcName = currentFunction;
+      final String funcName = funcs.get(currentFunction).getEntry().getLabel();
       return new Instruction("ret",
                               new Register[] {},
                               null) {
