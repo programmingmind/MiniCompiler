@@ -100,13 +100,13 @@ public class InstructionFactory {
          public List<String> toAssembly() {
             List<String> commands = new ArrayList<String>();
             commands.add("pushq %rbp");
-            commands.add("movq %rsp, %rbp");
             if (! name.equals("main")) {
                commands.add("push %r12");
                commands.add("push %r13");
                commands.add("push %r14");
                commands.add("push %r15");
             }
+            commands.add("movq %rsp, %rbp");
             commands.add("subq $" + stackSize + ", %rsp");
             return commands;
          }
@@ -608,13 +608,13 @@ public class InstructionFactory {
          public List<String> toAssembly() {
             List<String> commands = new ArrayList<String>();
             commands.add("addq $" + stackSize + ", %rsp");
+            commands.add("leave");
             if (! funcName.equals("main")) {
                commands.add("pop %r15");
                commands.add("pop %r14");
                commands.add("pop %r13");
                commands.add("pop %r12");
             }
-            commands.add("leave");
             commands.add("ret");
             commands.add(".size " + funcName + ", .-" + funcName);
             return commands;
