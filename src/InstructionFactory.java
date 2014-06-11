@@ -563,9 +563,6 @@ public class InstructionFactory {
    }
 
    public static Instruction storeRet(Register reg) {
-      if (! reg.isASMSet() && funcs.get(currentFunction).getConditionalDepth() == 0)
-         reg.setASM("ax");
-
       return new Instruction("storeret r" + reg.getILOC(),
                               new Register[] {reg},
                               null) {
