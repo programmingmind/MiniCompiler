@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InstructionFactory {
-   private static final String[] ops = {"eq", "ge", "gt", "le", "lt", "ne"};
-   private static final String[] asmOps = {"e", "ge", "g", "le", "l", "ne"};
+   private static final String[] ops = {"eq", "ge", "gt", "lt", "le", "ne"};
+   private static final String[] asmOps = {"e", "ge", "g", "l", "le", "ne"};
    private static final String[] paramRegs = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 
    public static final String[] registers = {"10", "11", "12", "13", "14", "15"};
@@ -61,10 +61,10 @@ public class InstructionFactory {
          case TypeCheck.GT:
             ndx = 2;
             break;
-         case TypeCheck.LE:
+         case TypeCheck.LT:
             ndx = 3;
             break;
-         case TypeCheck.LT:
+         case TypeCheck.LE:
             ndx = 4;
             break;
          case TypeCheck.NE:
@@ -341,7 +341,7 @@ public class InstructionFactory {
 
    public static Instruction comp(Register left, Register right) {
       return new Instruction("comp r" + left.getILOC() + ", r" + right.getILOC(),
-                              new Register[] {left, right},
+                              new Register[] {right, left},
                               null) {
          protected String[] getBareAsm() {
             return new String[] {
