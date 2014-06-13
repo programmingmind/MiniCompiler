@@ -23,7 +23,7 @@ public class Block {
    private boolean hasLeft;
 
    private String function;
-   private int depth;
+   private int depth, loopDepth;
 
    private void init(String func, String which) {
       this.label = func + "_" + which;
@@ -41,11 +41,13 @@ public class Block {
 
       this.function = func;
       this.depth = 0;
+      this.loopDepth = 0;
 
       if (Functions.isDefined(func)) {
          if (Functions.get(func).getLoopDepth() == 0)
             Functions.get(func).setPreLoop(this);
 
+         this.loopDepth = Functions.get(func).getLoopDepth();
          this.depth = Functions.get(func).getLoopDepth() + Functions.get(func).getConditionalDepth();
       }
    }
@@ -75,6 +77,10 @@ public class Block {
 
    public int getDepth() {
       return depth;
+   }
+
+   public int getLoopDepth() {
+      return loopDepth;
    }
 
    public void removeInstruction(Instruction inst) {

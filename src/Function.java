@@ -484,7 +484,7 @@ public class Function {
                if (inst.toIloc().startsWith("storeai"))
                   continue;
 
-               if (! usedBeforeNextSet(inst)) {
+               if (! usedBeforeNextSet(inst) && b.getLoopDepth() == 0) {
                   change = true;
                   toRemove = inst;
                   break;
