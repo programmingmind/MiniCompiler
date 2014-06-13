@@ -261,36 +261,24 @@ public class Function {
    }
 
    private List<Block> sortBlocks() {
-      Stack<Block> toVisit = new Stack<Block>();
+      ArrayList<Block> toVisit = new ArrayList<Block>();
       ArrayList<Block> visited = new ArrayList<Block>();
 
-      toVisit.push(entry);
-      while (! toVisit.empty()) {
-         Block tmp = toVisit.pop();
+      toVisit.add(entry);
+      while (toVisit.size() > 0) {
+         Block tmp = toVisit.remove(0);
          visited.add(tmp);
 
-         List<Block> successors = tmp.getLinks();
-         ArrayList<Block> pre = new ArrayList<Block>();
-         ArrayList<Block> post = new ArrayList<Block>();
+         for (Block b : tmp.getLinks()) {
+            if (toVisit.contains(b) || visited.contains(b))
+               continue;
+            
+            int ndx;
+            for (ndx = 0; ndx < toVisit.size(); ndx++)
+               if (tmp.getDepth() >= toVisit.get(ndx).getDepth())
+                  break;
 
-         for (Block s : successors) {
-            if (! visited.contains(s)) {
-               if (s.getDepth() > tmp.getDepth()) {
-                  pre.add(s);
-               } else {
-                  post.add(s);
-               }
-            }
-         }
-
-         for (Block b : post)
-            if (! toVisit.contains(b))
-               toVisit.push(b);
-
-         if (pre.size() > 0) {
-            for (Block b : pre)
-               if (! toVisit.contains(b))
-                  toVisit.push(b);
+            toVisit.add(ndx, b);
          }
       }
       visited.remove(exit);
