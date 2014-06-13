@@ -275,7 +275,7 @@ public class Function {
             
             int ndx;
             for (ndx = 0; ndx < toVisit.size(); ndx++)
-               if (tmp.getDepth() >= toVisit.get(ndx).getDepth())
+               if (tmp.getDepth() > toVisit.get(ndx).getDepth())
                   break;
 
             toVisit.add(ndx, b);
