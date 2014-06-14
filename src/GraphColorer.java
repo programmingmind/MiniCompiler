@@ -1,6 +1,9 @@
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -31,16 +34,23 @@ public class GraphColorer {
       }
    }
 
-   private Set<Node> graph;
+   private List<Node> graph;
    private Function function;
 
    public GraphColorer(Collection<Register> registers, Function function) {
       this.function = function;
 
-      graph = new HashSet<Node>();
+      Set<Node> tmpGraph = new HashSet<Node>();
       
       for (Register reg : registers)
-         graph.add(new Node(reg));
+         tmpGraph.add(new Node(reg));
+
+      graph = new ArrayList<Node>(tmpGraph);
+      Collections.sort(graph, new Comparator<Node>() {
+         public int compare(Node n1, Node n2) {
+            return n1.getReg().totalRange() - n2.getReg().totalRange();
+         }
+      });
 
       for (Node node : graph) {
          for (Node link : graph) {

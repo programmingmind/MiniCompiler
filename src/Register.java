@@ -53,7 +53,7 @@ public class Register {
    public boolean overlaps(Register r) {
       if (r == this)
          return false;
-      
+
       for (Block b : range.keySet()) {
          int[] blockRange = range.get(b);
          int[] otherRange = r.range.get(b);
@@ -64,6 +64,17 @@ public class Register {
          }
       }
       return false;
+   }
+
+   public int totalRange() {
+      int count = 0;
+
+      for (Block b : range.keySet()) {
+         int[] vals = range.get(b);
+         count += vals[1] - vals[0];
+      }
+
+      return count;
    }
 
    public void spill(int spillCount) {
