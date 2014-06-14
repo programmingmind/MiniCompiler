@@ -51,6 +51,9 @@ public class Register {
    }
 
    public boolean overlaps(Register r) {
+      if (r == this)
+         return false;
+      
       for (Block b : range.keySet()) {
          int[] blockRange = range.get(b);
          int[] otherRange = r.range.get(b);
