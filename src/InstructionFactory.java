@@ -89,7 +89,7 @@ public class InstructionFactory {
    }
 
    public static Instruction functionStart(final String name) {
-      final int stackSize = funcs.get(name).getStackSize();
+      final Function startFunc = funcs.get(name);
       return new Instruction("",
                               new Register[] {},
                               null) {
@@ -107,7 +107,7 @@ public class InstructionFactory {
                commands.add("push %r14");
                commands.add("push %r15");
             }
-            commands.add("subq $" + stackSize + ", %rsp");
+            commands.add("subq $" + startFunc.getStackSize() + ", %rsp");
             return commands;
          }
       };                       
@@ -596,7 +596,7 @@ public class InstructionFactory {
    }
 
    public static Instruction realRet() {
-      final int stackSize = funcs.get(currentFunction).getStackSize();
+      final Function retFunc = funcs.get(currentFunction);
       final String funcName = funcs.get(currentFunction).getEntry().getLabel();
       return new Instruction("ret",
                               new Register[] {},
@@ -607,7 +607,7 @@ public class InstructionFactory {
 
          public List<String> toAssembly() {
             List<String> commands = new ArrayList<String>();
-            commands.add("addq $" + stackSize + ", %rsp");
+            commands.add("addq $" + retFunc.getStackSize() + ", %rsp");
             if (! funcName.equals("main")) {
                commands.add("pop %r15");
                commands.add("pop %r14");
