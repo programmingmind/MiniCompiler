@@ -13,7 +13,7 @@ Running the Compiler
 
 There is an included file `run.sh` which will properly call the java program with the correct classpath. You pass it the path to the .mini source file. Assembly files are saved to the `asm` folder. ILOC files are saved to the `iloc` folder. Control Flow Graphs for each compiled functions are saved as a .dot file in the `dot` folder.
 
-Usage: `./run.sh [-no_out] [options] sourceFile [options]`
+Usage: `./run.sh [-no_out] [option...] sourceFile [option...]`
 * `-no_out` : Hides debug developer messages during the compile process
 * `dumpIL` : Saves the ILOC instructions to a file
 * `-keepDead` : Doesn't remove "dead" instructions
@@ -30,7 +30,7 @@ Testing Benchmarks
 
 There is an included file that will test the benchmarks.
 
-Usage: `./testBenchmarks.sh [options]`
+Usage: `./testBenchmarks.sh [option]`
 * `-q` : Run all the benchmarks with the `-no_out` options
 * `-s` : Run with `no_out` option and also hide all compiler warnings
 * `-t` : Time the run time of the compiler generate code, as well as the run time for gcc optimizations levels -O0 through -O3
