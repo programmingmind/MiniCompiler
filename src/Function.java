@@ -75,6 +75,8 @@ public class Function {
 
    private int loopDepth, conditionalDepth;
 
+   private boolean checkASM;
+
    public Function(String name, Type returnType, SymbolTable vars) {
       this.name = name;
       this.returnType = returnType;
@@ -95,6 +97,8 @@ public class Function {
 
       loopDepth = 0;
       conditionalDepth = 0;
+
+      checkASM = false;
 
       preLoop = entry;
    }
@@ -295,7 +299,7 @@ public class Function {
       List<String> prefix = InstructionFactory.functionStart(name).toAssembly();
 
       for (Block tmp : sortBlocks()) {
-         code = tmp == entry ? tmp.getCode(prefix) : tmp.getCode();
+         code = tmp == entry ? tmp.getCode(checkASM, prefix) : tmp.getCode(checkASM);
          iloc.append(code[0]);
          asm.append(code[1]);
       }
@@ -440,6 +444,8 @@ public class Function {
    }
 
    public void removeUselessInstructions() {
+      checkASM = true;
+
       List<Block> blocks = sortBlocks();
       boolean change = true;
 

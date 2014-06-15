@@ -125,11 +125,11 @@ public class Block {
       }
    }
 
-   public String[] getCode() {
-      return getCode(new ArrayList<String>());
+   public String[] getCode(boolean dropUseless) {
+      return getCode(dropUseless, new ArrayList<String>());
    }
 
-   public String[] getCode(List<String> prefix) {
+   public String[] getCode(boolean dropUseless, List<String> prefix) {
       StringWriter iloc = new StringWriter();
       StringWriter asm = new StringWriter();
 
@@ -141,8 +141,15 @@ public class Block {
       
       for (Instruction instruction : instructions) {
          iloc.append("\t" + instruction.toIloc() + "\n");
-         for (String s : instruction.toAssembly())
+         for (String s : instruction.toAssembly()) {
+            if (dropUseless) {
+               String[] parts = s.split(" ");
+               if (parts.length == 3 && parts[0].equals("mov") && parts[1].equals(parts[2]))
+                  continue;
+            }
+
             asm.append("\t" + s + "\n");
+         }     
       }
 
       return new String[] {iloc.toString(), asm.toString()};
